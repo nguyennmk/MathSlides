@@ -1,0 +1,46 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35707.178 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathSlides.Business_Object", "MathSlides.Business_Object\MathSlides.Business_Object.csproj", "{2FC0ACED-DADE-4645-BD86-387396B28CC1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathSlides.Data_Analysis_Object", "MathSlides.Data_Analysis_Object\MathSlides.Data_Analysis_Object.csproj", "{5230BFD8-CAFD-4255-8741-7A848D35E1DE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathSlides.Repository", "MathSlides.Repository\MathSlides.Repository.csproj", "{455C45F3-0BA5-40D2-B6BB-E762883B993C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathSlides.Service", "MathSlides.Service\MathSlides.Service.csproj", "{506CD23C-1075-43DF-A9F2-C1B367392B19}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathSlides.Present", "MathSlides.Present\MathSlides.Present.csproj", "{F4BA6F19-E880-4358-AED5-2AFD26BCA553}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2FC0ACED-DADE-4645-BD86-387396B28CC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FC0ACED-DADE-4645-BD86-387396B28CC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FC0ACED-DADE-4645-BD86-387396B28CC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FC0ACED-DADE-4645-BD86-387396B28CC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5230BFD8-CAFD-4255-8741-7A848D35E1DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5230BFD8-CAFD-4255-8741-7A848D35E1DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5230BFD8-CAFD-4255-8741-7A848D35E1DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5230BFD8-CAFD-4255-8741-7A848D35E1DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{455C45F3-0BA5-40D2-B6BB-E762883B993C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{455C45F3-0BA5-40D2-B6BB-E762883B993C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{455C45F3-0BA5-40D2-B6BB-E762883B993C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{455C45F3-0BA5-40D2-B6BB-E762883B993C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{506CD23C-1075-43DF-A9F2-C1B367392B19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{506CD23C-1075-43DF-A9F2-C1B367392B19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{506CD23C-1075-43DF-A9F2-C1B367392B19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{506CD23C-1075-43DF-A9F2-C1B367392B19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4BA6F19-E880-4358-AED5-2AFD26BCA553}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4BA6F19-E880-4358-AED5-2AFD26BCA553}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4BA6F19-E880-4358-AED5-2AFD26BCA553}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4BA6F19-E880-4358-AED5-2AFD26BCA553}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
