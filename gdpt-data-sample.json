@@ -1,0 +1,115 @@
+{
+  "topics": [
+    {
+      "topicName": "Phân số",
+      "className": "Lớp 5",
+      "gradeName": "Cấp 1",
+      "strandName": "Số, Đại số và Giải tích",
+      "objectives": "Hiểu và thực hiện phép tính với phân số.",
+      "source": "Thông tư 32/2018",
+      "contents": [
+        {
+          "title": "Khái niệm phân số",
+          "summary": "Phân số là biểu diễn của một phần trong tổng thể.",
+          "formulas": [
+            {
+              "formulaText": "\\frac{a}{b}",
+              "explanation": "Phân số với tử số a và mẫu số b"
+            }
+          ],
+          "examples": [
+            {
+              "exampleText": "Ví dụ: \\frac{1}{2} là một nửa"
+            }
+          ],
+          "media": [
+            {
+              "type": "Image",
+              "url": "https://example.com/fraction.png",
+              "description": "Hình minh họa phân số"
+            }
+          ]
+        },
+        {
+          "title": "Cộng trừ phân số",
+          "summary": "Cách cộng, trừ các phân số cùng và khác mẫu.",
+          "formulas": [
+            {
+              "formulaText": "\\frac{a}{b} + \\frac{c}{d} = \\frac{ad + bc}{bd}",
+              "explanation": "Công thức cộng hai phân số khác mẫu."
+            },
+            {
+              "formulaText": "\\frac{a}{b} - \\frac{c}{d} = \\frac{ad - bc}{bd}",
+              "explanation": "Công thức trừ hai phân số khác mẫu."
+            }
+          ],
+          "examples": [
+            {
+              "exampleText": "Ví dụ: \\frac{1}{2} + \\frac{1}{3} = \\frac{5}{6}"
+            },
+            {
+              "exampleText": "Ví dụ: \\frac{3}{4} - \\frac{1}{4} = \\frac{2}{4} = \\frac{1}{2}"
+            }
+          ],
+          "media": []
+        }
+      ]
+    },
+    {
+      "topicName": "Hình tam giác",
+      "className": "Lớp 6",
+      "gradeName": "Cấp 2",
+      "strandName": "Đo lường và Hình học",
+      "objectives": "Nhận dạng và phân loại tam giác.",
+      "source": "Thông tư 32/2018",
+      "contents": [
+        {
+          "title": "Các loại tam giác",
+          "summary": "Tam giác đều, cân, vuông và nhọn.",
+          "formulas": [],
+          "examples": [
+            {
+              "exampleText": "Tam giác có ba cạnh bằng nhau là tam giác đều."
+            },
+            {
+              "exampleText": "Tam giác có hai cạnh bằng nhau là tam giác cân."
+            },
+            {
+              "exampleText": "Tam giác có một góc vuông là tam giác vuông."
+            }
+          ],
+          "media": [
+            {
+              "type": "Image",
+              "url": "https://example.com/triangle-types.png",
+              "description": "Minh họa các loại tam giác"
+            }
+          ]
+        },
+        {
+          "title": "Diện tích tam giác",
+          "summary": "Công thức tính diện tích tam giác.",
+          "formulas": [
+            {
+              "formulaText": "S = \\frac{1}{2} \\times a \\times h",
+              "explanation": "Diện tích tam giác bằng nửa tích của cạnh đáy và chiều cao."
+            }
+          ],
+          "examples": [
+            {
+              "exampleText": "Ví dụ: Tam giác có đáy 6cm, chiều cao 4cm thì diện tích = \\frac{1}{2} \\times 6 \\times 4 = 12cm^2"
+            }
+          ],
+          "media": [
+            {
+              "type": "Image",
+              "url": "https://example.com/triangle-area.png",
+              "description": "Minh họa cách tính diện tích"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

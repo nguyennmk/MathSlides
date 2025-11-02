@@ -52,9 +52,13 @@ builder.Services.AddDbContext<MathSlidesAuthDbContext>(options =>
 
 // Repositories
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+builder.Services.AddScoped<IGDPTRepository, GDPTRepository>();
+builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
 
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IGDPTService, GDPTService>();
+builder.Services.AddScoped<ITemplateService, TemplateService>();
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
