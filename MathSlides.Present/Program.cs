@@ -4,9 +4,11 @@ using MathSlides.Repository.Repositories;
 using MathSlides.Service.Interfaces;
 using MathSlides.Service.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 using System.Text;
 
@@ -42,6 +44,16 @@ builder.Services.AddSwaggerGen(c =>
             Array.Empty<string>()
         }
     });
+    
+    // Map IFormFile để Swagger không lỗi khi generate
+    c.MapType<IFormFile>(() => new OpenApiSchema
+    {
+        Type = "string",
+        Format = "binary"
+    });
+    
+    // Thêm operation filter để xử lý file upload
+    c.OperationFilter<MathSlides.Present.Swagger.FileUploadOperationFilter>();
 });
 
 // Database
@@ -54,11 +66,13 @@ builder.Services.AddDbContext<MathSlidesAuthDbContext>(options =>
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGDPTRepository, GDPTRepository>();
 builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
+builder.Services.AddScoped<IPowerpointRepository, PowerpointRepository>();
 
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IGDPTService, GDPTService>();
 builder.Services.AddScoped<ITemplateService, TemplateService>();
+builder.Services.AddScoped<IPowerpointService, PowerpointService>();
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -92,6 +106,19 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Tạo thư mục wwwroot/Templates nếu chưa tồn tại
+var wwwrootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+if (!Directory.Exists(wwwrootPath))
+{
+    Directory.CreateDirectory(wwwrootPath);
+}
+var templatesPath = Path.Combine(wwwrootPath, "Templates");
+if (!Directory.Exists(templatesPath))
+{
+    Directory.CreateDirectory(templatesPath);
+}
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
