@@ -1,0 +1,91 @@
+{
+  "SlideCount": 3,
+  "Slides": [
+    {
+      "SlideId": "rId11",
+      "Shapes": [
+        {
+          "ShapeId": 1,
+          "Name": "TitleBox 1",
+          "Text": "Giới thiệu về Đại số"
+        },
+        {
+          "ShapeId": 2,
+          "Name": "TextBox 2",
+          "Text": "Đại số là nhánh của toán học nghiên cứu các phép toán và quan hệ giữa các đại lượng."
+        },
+        {
+          "ShapeId": 3,
+          "Name": "ImageBox 3",
+          "Text": ""
+        }
+      ],
+      "Texts": [
+        "Đại số cơ bản",
+        "Các biến và hằng số",
+        "Phép cộng và nhân"
+      ]
+    },
+    {
+      "SlideId": "rId12",
+      "Shapes": [
+        {
+          "ShapeId": 4,
+          "Name": "TitleBox 4",
+          "Text": "Lực và Chuyển động"
+        },
+        {
+          "ShapeId": 5,
+          "Name": "TextBox 5",
+          "Text": "Lực là nguyên nhân gây ra sự thay đổi vận tốc của vật thể."
+        },
+        {
+          "ShapeId": 6,
+          "Name": "DiagramBox 6",
+          "Text": ""
+        },
+        {
+          "ShapeId": 7,
+          "Name": "NoteBox 7",
+          "Text": "F = m × a"
+        }
+      ],
+      "Texts": [
+        "Lực tiếp xúc và lực không tiếp xúc",
+        "Định luật II Newton",
+        "Ví dụ minh họa"
+      ]
+    },
+    {
+      "SlideId": "rId13",
+      "Shapes": [
+        {
+          "ShapeId": 8,
+          "Name": "TitleBox 8",
+          "Text": "Lịch sử Việt Nam"
+        },
+        {
+          "ShapeId": 9,
+          "Name": "TextBox 9",
+          "Text": "Giai đoạn phong kiến Việt Nam bắt đầu từ thế kỷ X với triều đại Ngô Quyền."
+        },
+        {
+          "ShapeId": 10,
+          "Name": "TextBox 10",
+          "Text": "Triều đại Lý, Trần và Lê là những giai đoạn phát triển rực rỡ."
+        },
+        {
+          "ShapeId": 11,
+          "Name": "ImageBox 11",
+          "Text": ""
+        }
+      ],
+      "Texts": [
+        "Thời kỳ dựng nước",
+        "Các triều đại tiêu biểu",
+        "Những di sản văn hóa còn lại"
+      ]
+    }
+  ],
+  "CreatedAt": "2025-11-02T13:45:12.9876543Z"
+}
