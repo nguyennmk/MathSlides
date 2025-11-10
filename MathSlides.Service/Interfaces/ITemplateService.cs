@@ -6,6 +6,8 @@ namespace MathSlides.Service.Interfaces
     {
         Task<List<TemplateDTO>> GetAllTemplatesAsync(bool onlyActive = true);
         Task<TemplateDetailDTO?> GetTemplateByIdAsync(int templateId);
+
+        Task<string> GetTemplateJsonAsync(string templateName);
     }
 }
 

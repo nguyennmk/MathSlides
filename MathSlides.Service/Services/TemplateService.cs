@@ -2,6 +2,7 @@ using MathSlides.Business_Object.Models.DTOs.GDPT;
 using MathSlides.Business_Object.Models.Entities;
 using MathSlides.Repository.Interfaces;
 using MathSlides.Service.Interfaces;
+using Microsoft.AspNetCore.Hosting;
 using System.Text.Json;
 
 namespace MathSlides.Service.Services
@@ -10,9 +11,12 @@ namespace MathSlides.Service.Services
     {
         private readonly ITemplateRepository _templateRepository;
 
-        public TemplateService(ITemplateRepository templateRepository)
+        private readonly IWebHostEnvironment _env;
+
+        public TemplateService(ITemplateRepository templateRepository, IWebHostEnvironment env)
         {
             _templateRepository = templateRepository;
+            _env = env;
         }
 
         public async Task<List<TemplateDTO>> GetAllTemplatesAsync(bool onlyActive = true)
@@ -50,7 +54,6 @@ namespace MathSlides.Service.Services
                 IsActive = template.IsActive
             };
 
-            // Lấy nội dung JSON và parse
             try
             {
                 var jsonContent = await _templateRepository.GetTemplateContentAsync(templateId);
@@ -66,11 +69,24 @@ namespace MathSlides.Service.Services
             }
             catch
             {
-                // Nếu không parse được JSON, để Content = null
                 templateDTO.Content = null;
             }
 
             return templateDTO;
+        }
+
+        public async Task<string> GetTemplateJsonAsync(string templateName)
+        {
+            var wwwRootPath = _env.WebRootPath;
+
+            var templatePath = Path.Combine(wwwRootPath, "templates", templateName);
+
+            if (!File.Exists(templatePath))
+            {
+                throw new FileNotFoundException("Không tìm thấy file JSON template.", templatePath);
+            }
+
+            return await File.ReadAllTextAsync(templatePath);
         }
     }
 }
