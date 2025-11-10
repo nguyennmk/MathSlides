@@ -34,7 +34,7 @@ namespace MathSlides.Service.Services
             if (await _authRepository.EmailExistsAsync(request.Email))
                 throw new ArgumentException("Email already exists");
 
-            var role = await _authRepository.GetRoleByIdAsync(request.RoleID);
+            var role = await _authRepository.GetRoleByIdAsync(3);
             if (role == null)
                 throw new ArgumentException("Invalid role");
 
@@ -46,9 +46,9 @@ namespace MathSlides.Service.Services
                 Username = request.Username,
                 Email = request.Email,
                 PasswordHash = passwordHash,
-                RoleID = request.RoleID,
+                RoleID = 3,
                 CreatedAt = DateTime.UtcNow,
-                RoleName = role.Name
+                RoleName = role.Name 
             };
 
             await _authRepository.CreateUserAsync(user);
