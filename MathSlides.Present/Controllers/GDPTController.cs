@@ -19,9 +19,6 @@ namespace MathSlides.Present.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Import tài liệu GDPT từ JSON request
-        /// </summary>
         [HttpPost("import")]
         //[Authorize(Roles = "Admin,Teacher")] // Chỉ Admin và Teacher mới được import
         public async Task<IActionResult> ImportGDPTData([FromBody] ImportGDPTRequest request)
