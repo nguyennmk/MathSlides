@@ -69,11 +69,21 @@ namespace MathSlides.Present.Controllers
 
         [HttpGet("profile")]
         [Authorize]
-        public IActionResult GetProfile()
+        public async Task<IActionResult> GetProfile()
         {
-            var username = User.Identity?.Name;
-            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-            return Ok(new { Username = username, Role = role });
+            try
+            {
+                var userInfo = await _authService.GetProfileAsync(User);
+                return Ok(userInfo);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving the profile." });
+            }
         }
     }
 }
