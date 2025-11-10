@@ -58,13 +58,13 @@ namespace MathSlides.Service.Services
 
         public async Task<AuthResponse> LoginAsync(LoginRequest request)
         {
-            var user = await _authRepository.GetUserByUsernameAsync(request.Username);
+            var user = await _authRepository.GetUserByEmailAsync(request.Email);
             if (user == null)
-                throw new UnauthorizedAccessException("Invalid username or password");
+                throw new UnauthorizedAccessException("Invalid Email or password");
 
             // Verify password - Sửa lỗi BCrypt
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-                throw new UnauthorizedAccessException("Invalid username or password");
+                throw new UnauthorizedAccessException("Invalid Email or password");
 
             // Update RoleName if null
             if (string.IsNullOrEmpty(user.RoleName))
@@ -127,6 +127,28 @@ namespace MathSlides.Service.Services
                     Role = user.RoleName
                 }
             };
+        }
+        public Task<UserInfo> GetProfileAsync(ClaimsPrincipal user)
+        {
+            var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var username = user.FindFirst(ClaimTypes.Name)?.Value;
+            var email = user.FindFirst(ClaimTypes.Email)?.Value;
+            var role = user.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var userId))
+            {
+                throw new UnauthorizedAccessException("Invalid token: UserID is missing or invalid.");
+            }
+
+            var userInfo = new UserInfo
+            {
+                UserID = userId,
+                Username = username ?? string.Empty,
+                Email = email ?? string.Empty,
+                Role = role ?? string.Empty
+            };
+
+            return Task.FromResult(userInfo);
         }
     }
 }
