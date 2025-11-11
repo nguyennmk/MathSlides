@@ -1,12 +1,24 @@
+// File: MathSlides.Service/Services/PowerpointService.cs
+// (THAY THẾ file của bạn)
+
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Presentation;
 using MathSlides.Business_Object.Models.DTOs.Powerpoint;
+using MathSlides.Business_Object.Models.Entities;
 using MathSlides.Repository.Interfaces;
 using MathSlides.Service.Interfaces;
-using Microsoft.AspNetCore.Hosting; // <-- ĐÃ THAY ĐỔI
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
+using P = DocumentFormat.OpenXml.Presentation;
+using D = DocumentFormat.OpenXml.Drawing;
 
 namespace MathSlides.Service.Services
 {
@@ -14,53 +26,42 @@ namespace MathSlides.Service.Services
     {
         private readonly IPowerpointRepository _powerpointRepository;
         private readonly ILogger<PowerpointService> _logger;
-        // Sử dụng IWebHostEnvironment để làm việc với wwwroot
-        private readonly IWebHostEnvironment _webHostEnvironment; // <-- ĐÃ THAY ĐỔI
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public PowerpointService(
             IPowerpointRepository powerpointRepository,
             ILogger<PowerpointService> logger,
-            IWebHostEnvironment webHostEnvironment) // <-- ĐÃ THAY ĐỔI
+            IWebHostEnvironment webHostEnvironment)
         {
             _powerpointRepository = powerpointRepository;
             _logger = logger;
-            _webHostEnvironment = webHostEnvironment; // <-- ĐÃ THAY ĐỔI
+            _webHostEnvironment = webHostEnvironment;
         }
+
+        // =============================================
+        // === CÁC PHƯƠNG THỨC "IMPORT" CỦA BẠN (GIỮ NGUYÊN) ===
+        // =============================================
 
         public async Task<PowerpointImportResponse> ImportPowerpointAsync(Stream fileStream, string fileName, string? name = null, string? description = null)
         {
             try
             {
-                // Đọc file vào memory stream
                 using var memoryStream = new MemoryStream();
                 await fileStream.CopyToAsync(memoryStream);
                 memoryStream.Position = 0;
 
-                // Chuyển đổi PowerPoint sang JSON
                 var (jsonContent, slideCount) = await ConvertPowerpointToJsonAsync(memoryStream);
 
-                // Tạo tên file JSON độc nhất để tránh ghi đè
                 var uniqueFileName = $"{Path.GetFileNameWithoutExtension(fileName)}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(fileName)}";
                 var jsonFileName = Path.ChangeExtension(uniqueFileName, ".json");
-
                 var jsonBytes = Encoding.UTF8.GetBytes(jsonContent);
-
-                // Lấy đường dẫn VẬT LÝ đến thư mục wwwroot
                 var webRootPath = _webHostEnvironment.WebRootPath;
-
-                // Gọi Repository để LƯU FILE VẬT LÝ
-                // (Chúng ta giả định SaveFileAsync trả về đường dẫn vật lý đầy đủ)
                 var physicalPath = await _powerpointRepository.SaveFileAsync(jsonBytes, jsonFileName, webRootPath, "Templates");
-
-                // TẠO ĐƯỜNG DẪN TƯƠNG ĐỐI (RELATIVE PATH)
-                // Đây là đường dẫn mà React, CSDL và AI sẽ sử dụng
-                // Nó bắt đầu bằng "/" và trỏ vào bên trong wwwroot
                 var relativePath = $"/Templates/{jsonFileName}";
 
                 return new PowerpointImportResponse
                 {
-                    // TRẢ VỀ ĐƯỜNG DẪN TƯƠNG ĐỐI
-                    TemplatePath = relativePath, // <-- ĐÃ SỬA
+                    TemplatePath = relativePath,
                     FileName = jsonFileName,
                     JsonContent = jsonContent,
                     SlideCount = slideCount,
@@ -87,15 +88,13 @@ namespace MathSlides.Service.Services
                 var webRootPath = _webHostEnvironment.WebRootPath;
                 var jsonContent = await _powerpointRepository.ReadFileAsync(templatePath, webRootPath);
 
-                // Parse JSON để lấy thông tin
                 using var jsonDoc = JsonDocument.Parse(jsonContent);
                 var root = jsonDoc.RootElement;
 
-                var slideCount = root.TryGetProperty("SlideCount", out var slideCountProp) 
-                    ? slideCountProp.GetInt32() 
+                var slideCount = root.TryGetProperty("SlideCount", out var slideCountProp)
+                    ? slideCountProp.GetInt32()
                     : 0;
 
-                // Lấy tên file từ templatePath
                 var fileName = Path.GetFileName(templatePath);
                 if (string.IsNullOrEmpty(fileName))
                 {
@@ -128,8 +127,6 @@ namespace MathSlides.Service.Services
             try
             {
                 var webRootPath = _webHostEnvironment.WebRootPath;
-
-                // Validate JSON content
                 try
                 {
                     using var jsonDoc = JsonDocument.Parse(jsonContent);
@@ -139,10 +136,8 @@ namespace MathSlides.Service.Services
                         ? slideCountProp.GetInt32()
                         : 0;
 
-                    // Update file
                     await _powerpointRepository.UpdateFileAsync(templatePath, jsonContent, webRootPath);
 
-                    // Lấy tên file từ templatePath
                     var fileName = Path.GetFileName(templatePath);
                     if (string.IsNullOrEmpty(fileName))
                     {
@@ -176,10 +171,8 @@ namespace MathSlides.Service.Services
             }
         }
 
-        //
-        // --- CÁC HÀM PRIVATE GIỮ NGUYÊN ---
-        //
 
+        // --- CÁC HÀM PRIVATE "IMPORT" CỦA BẠN (GIỮ NGUYÊN) ---
         private async Task<(string jsonContent, int slideCount)> ConvertPowerpointToJsonAsync(Stream fileStream)
         {
             return await Task.Run(() =>
@@ -251,7 +244,6 @@ namespace MathSlides.Service.Services
                     Shapes = new List<ShapeData>()
                 };
 
-                // Lấy CommonSlideData
                 if (slide.CommonSlideData?.ShapeTree != null)
                 {
                     foreach (var shape in slide.CommonSlideData.ShapeTree.Elements<DocumentFormat.OpenXml.Presentation.Shape>())
@@ -263,7 +255,6 @@ namespace MathSlides.Service.Services
                         }
                     }
 
-                    // Lấy text từ TextBody
                     foreach (var textBody in slide.CommonSlideData.ShapeTree.Descendants<DocumentFormat.OpenXml.Drawing.TextBody>())
                     {
                         var text = ExtractTextFromTextBody(textBody);
@@ -293,7 +284,6 @@ namespace MathSlides.Service.Services
                     Name = shape.NonVisualShapeProperties?.NonVisualDrawingProperties?.Name?.Value ?? ""
                 };
 
-                // Lấy text từ shape
                 var textBody = shape.GetFirstChild<DocumentFormat.OpenXml.Drawing.TextBody>();
                 if (textBody != null)
                 {
@@ -339,6 +329,195 @@ namespace MathSlides.Service.Services
             public uint ShapeId { get; set; }
             public string Name { get; set; } = string.Empty;
             public string Text { get; set; } = string.Empty;
+        }
+
+
+        // =============================================
+        // === PHƯƠNG THỨC "GENERATION" (Lựa chọn 2) ===
+        // =============================================
+
+        // === CÁC LỚP HELPER ĐỂ ĐỌC JSON TEMPLATE ===
+        private class PptxTemplate { public long SlideWidthEmu { get; set; } public long SlideHeightEmu { get; set; } public long MarginEmu { get; set; } public Layouts Layouts { get; set; } = new(); }
+        private class Layouts { public Layout TitleSlide { get; set; } = new(); public Layout ContentSlide { get; set; } = new(); public SplitLayout SplitSlide { get; set; } = new(); }
+        private class Layout { public ShapeProps Title { get; set; } = new(); public ShapeProps Content { get; set; } = new(); public ShapeProps Subtitle { get; set; } = new(); }
+        private class SplitLayout { public ShapeProps Title { get; set; } = new(); public ShapeProps LeftContent { get; set; } = new(); public ShapeProps RightContent { get; set; } = new(); }
+        private class ShapeProps { public long X { get; set; } public long Y { get; set; } public long W { get; set; } public long H { get; set; } public int FontSize { get; set; } public string Align { get; set; } = "left"; }
+        // ==========================================
+
+        public async Task<MemoryStream> GeneratePptxFromJsonTemplateAsync(List<Content> contentList, string templateJson, string topicName)
+        {
+            var template = JsonSerializer.Deserialize<PptxTemplate>(templateJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (template == null)
+            {
+                throw new InvalidOperationException("Không thể đọc file JSON template.");
+            }
+
+            MemoryStream ms = new MemoryStream();
+            await Task.Run(() =>
+            {
+                using (PresentationDocument pptDoc = PresentationDocument.Create(ms, PresentationDocumentType.Presentation, true))
+                {
+                    PresentationPart presentationPart = pptDoc.AddPresentationPart();
+                    presentationPart.Presentation = new P.Presentation();
+                    CreatePresentationParts(presentationPart);
+
+                    uint shapeIdCounter = 1;
+
+                    // --- SLIDE 1: TIÊU ĐỀ (Dùng layout 'titleSlide') ---
+                    var titleLayout = template.Layouts.TitleSlide;
+                    SlidePart slidePart1 = CreateSlidePart(presentationPart);
+                    ShapeTree shapeTree1 = slidePart1.Slide.CommonSlideData.ShapeTree;
+
+                    shapeTree1.Append(CreateTextShape(
+                        (shapeIdCounter++).ToString(),
+                        topicName,
+                        titleLayout.Title.X, titleLayout.Title.Y, titleLayout.Title.W, titleLayout.Title.H,
+                        titleLayout.Title.FontSize, GetAlignment(titleLayout.Title.Align)
+                    ));
+                    var firstContent = contentList.FirstOrDefault();
+                    if (firstContent != null)
+                    {
+                        shapeTree1.Append(CreateTextShape(
+                            (shapeIdCounter++).ToString(),
+                            firstContent.Title,
+                            titleLayout.Subtitle.X, titleLayout.Subtitle.Y, titleLayout.Subtitle.W, titleLayout.Subtitle.H,
+                            titleLayout.Subtitle.FontSize, GetAlignment(titleLayout.Subtitle.Align)
+                        ));
+                    }
+
+                    // --- SLIDE 2...: TỪNG NỘI DUNG (Content) ---
+                    foreach (var content in contentList)
+                    {
+                        // --- SLIDE TÓM TẮT (Dùng layout 'contentSlide') ---
+                        if (!string.IsNullOrWhiteSpace(content.Summary))
+                        {
+                            var contentLayout = template.Layouts.ContentSlide;
+                            SlidePart slidePartN = CreateSlidePart(presentationPart);
+                            ShapeTree shapeTreeN = slidePartN.Slide.CommonSlideData.ShapeTree;
+
+                            shapeTreeN.Append(CreateTextShape(
+                                (shapeIdCounter++).ToString(), content.Title,
+                                contentLayout.Title.X, contentLayout.Title.Y, contentLayout.Title.W, contentLayout.Title.H,
+                                contentLayout.Title.FontSize, GetAlignment(contentLayout.Title.Align)
+                            ));
+                            shapeTreeN.Append(CreateTextShape(
+                                (shapeIdCounter++).ToString(), content.Summary,
+                                contentLayout.Content.X, contentLayout.Content.Y, contentLayout.Content.W, contentLayout.Content.H,
+                                contentLayout.Content.FontSize, GetAlignment(contentLayout.Content.Align)
+                            ));
+                        }
+
+                        // --- SLIDE CÔNG THỨC & VÍ DỤ (Dùng layout 'splitSlide') ---
+                        if (content.Formulas.Any() || content.Examples.Any())
+                        {
+                            var splitLayout = template.Layouts.SplitSlide;
+                            SlidePart slidePartSplit = CreateSlidePart(presentationPart);
+                            ShapeTree shapeTreeSplit = slidePartSplit.Slide.CommonSlideData.ShapeTree;
+
+                            shapeTreeSplit.Append(CreateTextShape(
+                                (shapeIdCounter++).ToString(), content.Title,
+                                splitLayout.Title.X, splitLayout.Title.Y, splitLayout.Title.W, splitLayout.Title.H,
+                                splitLayout.Title.FontSize, GetAlignment(splitLayout.Title.Align)
+                            ));
+
+                            string formulaText = string.Join("\n\n", content.Formulas.Select(f => f.FormulaText + (f.Explanation != null ? $"\n({f.Explanation})" : "")));
+                            shapeTreeSplit.Append(CreateTextShape(
+                                (shapeIdCounter++).ToString(), formulaText,
+                                splitLayout.LeftContent.X, splitLayout.LeftContent.Y, splitLayout.LeftContent.W, splitLayout.LeftContent.H,
+                                splitLayout.LeftContent.FontSize, GetAlignment(splitLayout.LeftContent.Align)
+                            ));
+
+                            string exampleText = string.Join("\n\n", content.Examples.Select(e => e.ExampleText));
+                            shapeTreeSplit.Append(CreateTextShape(
+                                (shapeIdCounter++).ToString(), exampleText,
+                                splitLayout.RightContent.X, splitLayout.RightContent.Y, splitLayout.RightContent.W, splitLayout.RightContent.H,
+                                splitLayout.RightContent.FontSize, GetAlignment(splitLayout.RightContent.Align)
+                            ));
+                        }
+                    }
+                    presentationPart.Presentation.Save();
+                }
+            });
+
+            ms.Position = 0;
+            return ms;
+        }
+
+        // === CÁC PHƯƠNG THỨC HỖ TRỢ (Open XML) ===
+
+        private D.TextAlignmentTypeValues GetAlignment(string align)
+        {
+            return align?.ToLower() switch
+            {
+                "center" => D.TextAlignmentTypeValues.Center,
+                "right" => D.TextAlignmentTypeValues.Right,
+                _ => D.TextAlignmentTypeValues.Left,
+            };
+        }
+
+        private P.Shape CreateTextShape(string id, string text, long x, long y, long w, long h, int fontSize, D.TextAlignmentTypeValues alignment)
+        {
+            P.Shape shape = new P.Shape(
+                new P.NonVisualShapeProperties(
+                    new P.NonVisualDrawingProperties() { Id = (UInt32Value)uint.Parse(id), Name = $"TextBox {id}" },
+                    new P.NonVisualShapeDrawingProperties(new D.ShapeLocks() { NoGrouping = true }),
+                    new P.ApplicationNonVisualDrawingProperties(new P.PlaceholderShape())),
+                new P.ShapeProperties(
+                    new D.Transform2D(
+                        new D.Offset() { X = x, Y = y },
+                        new D.Extents() { Cx = w, Cy = h }),
+                    new D.PresetGeometry(new D.AdjustValueList()) { Preset = D.ShapeTypeValues.Rectangle }),
+                new P.TextBody(
+                    new D.BodyProperties(),
+                    new D.ListStyle(),
+                    new D.Paragraph(
+                        new D.ParagraphProperties(new D.DefaultRunProperties()) { Alignment = alignment },
+                        new D.Run(
+                            new D.RunProperties() { Language = "vi-VN", FontSize = fontSize * 100, Dirty = false },
+                            new D.Text(text ?? "")
+                        )
+                    )
+                )
+            );
+            return shape;
+        }
+
+        private SlidePart CreateSlidePart(PresentationPart presentationPart)
+        {
+            SlideLayoutPart slideLayoutPart = presentationPart.SlideMasterParts.First().SlideLayoutParts.First();
+            SlidePart slidePart = presentationPart.AddNewPart<SlidePart>();
+            slidePart.Slide = new P.Slide(new P.CommonSlideData(new P.ShapeTree()), new P.ColorMapOverride(new D.MasterColorMapping()));
+            slidePart.AddPart(slideLayoutPart);
+
+            if (presentationPart.Presentation.SlideIdList == null)
+                presentationPart.Presentation.SlideIdList = new P.SlideIdList();
+
+            uint slideIndex = (uint)presentationPart.Presentation.SlideIdList.Count() + 256U;
+            string relId = presentationPart.GetIdOfPart(slidePart);
+            presentationPart.Presentation.SlideIdList.AppendChild(new P.SlideId() { Id = slideIndex, RelationshipId = relId });
+
+            return slidePart;
+        }
+
+        private void CreatePresentationParts(PresentationPart presentationPart)
+        {
+            SlideMasterPart slideMasterPart = presentationPart.AddNewPart<SlideMasterPart>();
+            slideMasterPart.SlideMaster = new P.SlideMaster(
+                new P.CommonSlideData(new P.ShapeTree()),
+                new P.ColorMap(new D.MasterColorMapping(), new D.OverrideColorMapping()),
+                new P.SlideLayoutIdList(new P.SlideLayoutId() { Id = 2147483649U, RelationshipId = "rId1" })
+            );
+
+            SlideLayoutPart slideLayoutPart = slideMasterPart.AddNewPart<SlideLayoutPart>();
+            slideLayoutPart.SlideLayout = new P.SlideLayout(
+                new P.CommonSlideData(new P.ShapeTree()),
+                new P.ColorMapOverride(new D.MasterColorMapping())
+            );
+
+            ThemePart themePart = presentationPart.AddNewPart<ThemePart>();
+            themePart.Theme = new D.Theme() { Name = "Office Theme" };
+            slideMasterPart.AddPart(themePart);
+            presentationPart.AddPart(slideMasterPart);
         }
     }
 }

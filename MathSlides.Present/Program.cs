@@ -9,10 +9,37 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
-
+using System; 
+using System.IO;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var authConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Server=(localdb)\\mssqllocaldb;Database=MathSlidesAuthDB;Trusted_Connection=True;MultipleActiveResultSets=true";
+builder.Services.AddDbContext<MathSlidesAuthDbContext>(options =>
+    options.UseSqlServer(authConnectionString));
+
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+builder.Services.AddScoped<IGDPTRepository, GDPTRepository>();
+builder.Services.AddScoped<IPowerpointRepository, PowerpointRepository>();
+builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
+
+builder.Services.AddScoped<ITopicRepository, TopicRepository>();
+builder.Services.AddScoped<IContentRepository, ContentRepository>();
+
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IGDPTService, GDPTService>();
+builder.Services.AddScoped<IPowerpointService, PowerpointService>();
+builder.Services.AddScoped<ITemplateService, TemplateService>();
+
+builder.Services.AddHttpClient<IGeminiService, GeminiService>(client =>
+{
+    client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/");
+});
+
+
+builder.Services.AddScoped<ISlideGenerationService, SlideGenerationService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -46,6 +73,7 @@ builder.Services.AddSwaggerGen(c =>
             Array.Empty<string>()
         }
     });
+
 
     c.MapType<IFormFile>(() => new OpenApiSchema
     {
@@ -101,6 +129,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
 
 var wwwrootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
 if (!Directory.Exists(wwwrootPath))
