@@ -12,7 +12,6 @@ namespace MathSlides.Repository.Repositories
 {
     public class TopicRepository : ITopicRepository
     {
-        // Dùng AuthDbContext như file GDPTRepository của bạn
         private readonly MathSlidesAuthDbContext _context;
 
         public TopicRepository(MathSlidesAuthDbContext context)
@@ -24,7 +23,7 @@ namespace MathSlides.Repository.Repositories
         {
             return await _context.Topics
                 .Include(t => t.Class)
-                .ThenInclude(c => c.Grade) // Tải cả Grade
+                .ThenInclude(c => c.Grade) 
                 .Include(t => t.Strand)
                 .FirstOrDefaultAsync(t => t.TopicID == topicId);
         }

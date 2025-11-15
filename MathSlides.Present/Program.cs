@@ -84,20 +84,6 @@ builder.Services.AddSwaggerGen(c =>
     c.OperationFilter<MathSlides.Present.Swagger.FileUploadOperationFilter>();
 });
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Server=(localdb)\\mssqllocaldb;Database=MathSlidesAuthDB;Trusted_Connection=True;MultipleActiveResultSets=true";
-builder.Services.AddDbContext<MathSlidesAuthDbContext>(options =>
-    options.UseSqlServer(connectionString));
-
-builder.Services.AddScoped<IAuthRepository, AuthRepository>();
-builder.Services.AddScoped<IGDPTRepository, GDPTRepository>();
-builder.Services.AddScoped<ITemplateRepository, TemplateRepository>();
-builder.Services.AddScoped<IPowerpointRepository, PowerpointRepository>();
-
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IGDPTService, GDPTService>();
-builder.Services.AddScoped<ITemplateService, TemplateService>();
-builder.Services.AddScoped<IPowerpointService, PowerpointService>();
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey = jwtSettings["Secret"] ?? throw new InvalidOperationException("JWT Secret is required");

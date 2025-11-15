@@ -62,14 +62,10 @@ namespace MathSlides.Service.Services
                             generatedText = generatedText.Trim('`', 'j', 's', 'o', 'n', '\n', '\r', ' ');
                         }
 
-                        // === SỬA LỖI JSON (Cách Mới) ===
-                        // Gemini trả về (ví dụ): "\frac{a}{b}"
-                        // Chúng ta cần: "\\frac{a}{b}"
                         if (generatedText != null)
                         {
                             generatedText = generatedText.Replace(@"\", @"\\");
                         }
-                        // ===============================
 
                         return generatedText ?? string.Empty;
                     }
