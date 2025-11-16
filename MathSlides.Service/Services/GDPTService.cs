@@ -1,6 +1,7 @@
 using MathSlides.Business_Object.Models.DTOs.GDPT;
 using MathSlides.Business_Object.Models.Entities;
 using MathSlides.Repository.Interfaces;
+using MathSlides.Service.DTOs.GDPT;
 using MathSlides.Service.Interfaces;
 using System.Text.Json;
 
@@ -15,6 +16,43 @@ namespace MathSlides.Service.Services
             _gdptRepository = gdptRepository;
         }
 
+        private CurriculumDTO MapTopicToCurriculumDTO(Topic topic)
+        {
+            return new CurriculumDTO
+            {
+                TopicID = topic.TopicID,
+                TopicName = topic.Name,
+                ClassName = topic.Class?.Name ?? "N/A",
+                GradeName = topic.Class?.Grade?.Name ?? "N/A",
+                StrandName = topic.Strand?.Name ?? "N/A",
+                Objectives = topic.Objectives,
+                Source = topic.Source,
+                Contents = topic.Contents?.Select(content => new ContentDTO
+                {
+                    ContentID = content.ContentID,
+                    Title = content.Title,
+                    Summary = content.Summary,
+                    Formulas = content.Formulas.Select(f => new FormulaDTO
+                    {
+                        FormulaID = f.FormulaID,
+                        FormulaText = f.FormulaText,
+                        Explanation = f.Explanation
+                    }).ToList(),
+                    Examples = content.Examples.Select(e => new ExampleDTO
+                    {
+                        ExampleID = e.ExampleID,
+                        ExampleText = e.ExampleText
+                    }).ToList(),
+                    Media = content.Media.Select(m => new MediaDTO
+                    {
+                        MediaID = m.MediaID,
+                        Type = m.Type,
+                        Url = m.Url,
+                        Description = m.Description
+                    }).ToList()
+                }).ToList() ?? new List<ContentDTO>()
+            };
+        }
         public async Task<ImportGDPTResponse> ImportGDPTDataAsync(ImportGDPTRequest request)
         {
             var response = new ImportGDPTResponse
@@ -270,6 +308,29 @@ namespace MathSlides.Service.Services
                 return 3;
             return 1; // Default
         }
+        public async Task<CurriculumDTO> UpdateTopicAsync(int topicId, UpdateTopicRequestDTO request)
+        {
+            var topic = await _gdptRepository.GetTopicByIdAsync(topicId);
+            if (topic == null)
+            {
+                throw new KeyNotFoundException($"Không tìm thấy Topic với ID: {topicId}");
+            }
+
+            // Cập nhật các trường
+            topic.Name = request.Name;
+            topic.Objectives = request.Objectives;
+            topic.Source = request.Source;
+            topic.ClassID = request.ClassID;
+            topic.StrandID = request.StrandID;
+
+
+            var updatedTopic = await _gdptRepository.UpdateTopicAsync(topic);
+
+            var fullUpdatedTopic = await _gdptRepository.GetTopicByIdAsync(updatedTopic.TopicID);
+
+            return MapTopicToCurriculumDTO(fullUpdatedTopic!);
+        }
+
     }
 }
 

@@ -46,6 +46,8 @@ namespace MathSlides.Repository.Interfaces
         Task<List<Class>> GetAllClassesAsync();
 
         Task<int> SaveChangesAsync();
+        Task<Topic?> GetTopicByIdAsync(int topicId);
+        Task<Topic> UpdateTopicAsync(Topic topic);
     }
 }
 

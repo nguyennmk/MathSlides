@@ -200,6 +200,22 @@ namespace MathSlides.Repository.Repositories
         {
             return await _context.SaveChangesAsync();
         }
+        public async Task<Topic?> GetTopicByIdAsync(int topicId)
+        {
+            return await _context.Topics
+                .Include(t => t.Class)
+                    .ThenInclude(c => c.Grade)
+                .Include(t => t.Strand)
+                .FirstOrDefaultAsync(t => t.TopicID == topicId);
+        }
+
+        public async Task<Topic> UpdateTopicAsync(Topic topic)
+        {
+            _context.Topics.Update(topic);
+            await _context.SaveChangesAsync();
+            return topic;
+        }
+
     }
 }
 

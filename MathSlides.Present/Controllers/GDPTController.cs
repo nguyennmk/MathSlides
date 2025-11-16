@@ -1,4 +1,5 @@
 using MathSlides.Business_Object.Models.DTOs.GDPT;
+using MathSlides.Service.DTOs.GDPT;
 using MathSlides.Service.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -160,7 +161,35 @@ namespace MathSlides.Present.Controllers
                 return StatusCode(500, new { message = "Lỗi khi lấy giáo trình", error = ex.Message });
             }
         }
+        /// <summary>
+        /// Cập nhật thông tin cơ bản của một Topic (Admin/Teacher)
+        /// </summary>
+        // PUT: api/curriculums/topics/5
+        [HttpPut("topics/{id}")]
+        [Authorize(Roles = "Admin,Teacher")]
+        public async Task<IActionResult> UpdateTopic(int id, [FromBody] UpdateTopicRequestDTO request)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new { message = "Topic ID không hợp lệ." });
+            }
 
+            try
+            {
+                var updatedTopic = await _gdptService.UpdateTopicAsync(id, request);
+                return Ok(updatedTopic);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex.Message);
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Lỗi khi cập nhật topic {id}");
+                return StatusCode(500, new { message = "Lỗi máy chủ nội bộ.", details = ex.Message });
+            }
+        }
 
     }
 }

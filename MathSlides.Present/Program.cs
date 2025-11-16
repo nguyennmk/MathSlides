@@ -1,4 +1,4 @@
-using MathSlides.Data_Analysis_Object;
+﻿using MathSlides.Data_Analysis_Object;
 using MathSlides.Repository.Interfaces;
 using MathSlides.Repository.Repositories;
 using MathSlides.Service.Interfaces;
@@ -15,10 +15,15 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var authConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Server=(localdb)\\mssqllocaldb;Database=MathSlidesAuthDB;Trusted_Connection=True;MultipleActiveResultSets=true";
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("Not Found ConnectionString 'DefaultConnection' in appsettings.json.");
+}
+
 builder.Services.AddDbContext<MathSlidesAuthDbContext>(options =>
-    options.UseSqlServer(authConnectionString));
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IGDPTRepository, GDPTRepository>();
