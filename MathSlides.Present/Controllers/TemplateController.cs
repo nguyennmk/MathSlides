@@ -1,4 +1,5 @@
 using MathSlides.Business_Object.Models.DTOs.GDPT;
+using MathSlides.Business_Object.Models.DTOs.Powerpoint;
 using MathSlides.Service.DTOs.Admin;
 using MathSlides.Service.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -135,6 +136,35 @@ namespace MathSlides.Present.Controllers
             {
                 _logger.LogError(ex, $"Lỗi khi xóa template {id}");
                 return StatusCode(500, new { message = "Lỗi khi xóa template", error = ex.Message });
+            }
+        }
+
+        [HttpPost("import")]
+        [Consumes("multipart/form-data")]
+        [AllowAnonymous] // Hoặc [Authorize(Roles = "Admin")] tùy bạn
+        [RequestSizeLimit(50 * 1024 * 1024)] // 50MB
+        public async Task<IActionResult> ImportPptxTemplate([FromForm] PowerpointImportRequest request)
+        {
+            try
+            {
+                if (request.File == null || request.File.Length == 0)
+                    return BadRequest(new { message = "File không được để trống" });
+
+                // Gọi dịch vụ TEMPLATE (không phải Powerpoint)
+                var newTemplate = await _templateService.ImportPptxAsync(request);
+
+                // Trả về template đã được tạo
+                return CreatedAtAction(nameof(GetTemplateById), new { id = newTemplate.TemplateID }, newTemplate);
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning(ex, "Lỗi validation khi import PPTX.");
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi import file PowerPoint: {FileName}", request.File?.FileName);
+                return StatusCode(500, new { message = "Lỗi khi xử lý file PowerPoint", error = ex.Message });
             }
         }
     }

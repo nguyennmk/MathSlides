@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace MathSlides.Service.Services
 {
@@ -195,6 +196,50 @@ namespace MathSlides.Service.Services
             return await _templateRepository.DeleteTemplateAsync(templateId);
         }
 
+        public async Task<TemplateDTO> ImportPptxAsync(PowerpointImportRequest request)
+        {
+            if (request.File == null || request.File.Length == 0)
+            {
+                throw new ArgumentException("File không được để trống");
+            }
+
+            var allowedExtensions = new[] { ".pptx", ".ppt" };
+            var fileExtension = Path.GetExtension(request.File.FileName).ToLowerInvariant();
+
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                throw new ArgumentException("Chỉ chấp nhận file PowerPoint (.pptx, .ppt)");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                throw new ArgumentException("Tên (Name) không được để trống, vì nó sẽ được dùng làm tên file.");
+            }
+
+            // 1. Lưu file PPTX gốc vào /wwwroot/Templates/
+            //    SỬ DỤNG HÀM HELPER MỚI (SaveNamedFileAsync)
+            //    Chúng ta truyền request.Name để làm tên file
+            string pptxTemplatePath = await SaveNamedFileAsync(request.File, "Templates", request.Name);
+
+            // 2. Tạo Entity Template mới
+            var template = new Template
+            {
+                Name = request.Name, // Tên này cũng được lưu vào CSDL
+                Description = request.Description,
+                TemplatePath = pptxTemplatePath, // Đường dẫn tới file PPTX đã được đặt tên
+                ThumbnailUrl = "", // Không có thumbnail trong luồng import này
+                TemplateType = "PowerPoint",
+                Tags = "",
+                IsActive = true
+            };
+
+            // 3. Lưu vào DB
+            var createdTemplate = await _templateRepository.CreateTemplateAsync(template);
+
+            // 4. Trả về DTO
+            return MapTemplateToDTO(createdTemplate);
+        }
+
         // --- HÀM HELPER MỚI ĐỂ LƯU FILE ---
 
         /// <summary>
@@ -273,6 +318,85 @@ namespace MathSlides.Service.Services
                 Tags = t.Tags,
                 IsActive = t.IsActive
             };
+        }
+
+        /// <summary>
+        /// "Làm sạch" tên file để đảm bảo nó an toàn cho hệ thống file và URL.
+        /// </summary>
+        private string SanitizeFileName(string baseName)
+        {
+            if (string.IsNullOrEmpty(baseName)) return string.Empty;
+
+            var invalidChars = Path.GetInvalidFileNameChars();
+            // Xóa các ký tự không hợp lệ
+            var sanitizedName = new string(baseName.Where(ch => !invalidChars.Contains(ch)).ToArray());
+
+            // Thay thế khoảng trắng bằng gạch dưới (tùy chọn nhưng nên làm)
+            sanitizedName = sanitizedName.Replace(" ", "_");
+
+            // Xóa các dấu chấm liên tiếp
+            sanitizedName = Regex.Replace(sanitizedName, @"\.+", ".");
+
+            return sanitizedName.Trim('_', '.', '-'); // Xóa các ký tự phân cách ở đầu/cuối
+        }
+
+        /// <summary>
+        /// (HÀM MỚI) Lưu file với một tên CỤ THỂ, có kiểm tra trùng lặp.
+        /// </summary>
+        /// <param name="file">File được tải lên</param>
+        /// <param name="subfolder">Thư mục con (ví dụ: "Templates")</param>
+        /// <param name="baseFileName">Tên file mong muốn (không bao gồm phần mở rộng)</param>
+        private async Task<string> SaveNamedFileAsync(IFormFile file, string subfolder, string baseFileName)
+        {
+            // 1. Lấy đường dẫn thư mục
+            var wwwRootPath = _env.WebRootPath;
+            if (string.IsNullOrEmpty(wwwRootPath))
+            {
+                wwwRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            }
+            var folderPath = Path.Combine(wwwRootPath, subfolder);
+
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            // 2. Làm sạch tên file và tạo đường dẫn
+            var sanitizedBaseName = SanitizeFileName(baseFileName);
+            var fileExtension = Path.GetExtension(file.FileName); // e.g., ".pptx"
+
+            // Đảm bảo tên file sạch không bị rỗng
+            if (string.IsNullOrWhiteSpace(sanitizedBaseName))
+            {
+                // Nếu tên rỗng, dùng tạm tên gốc của file
+                sanitizedBaseName = SanitizeFileName(Path.GetFileNameWithoutExtension(file.FileName));
+                if (string.IsNullOrWhiteSpace(sanitizedBaseName))
+                {
+                    sanitizedBaseName = Guid.NewGuid().ToString(); // Fallback cuối cùng
+                }
+            }
+
+            var finalFileName = $"{sanitizedBaseName}{fileExtension}"; // e.g., "Bai_Giang_Phan_So.pptx"
+            var physicalPath = Path.Combine(folderPath, finalFileName);
+
+            // 3. KIỂM TRA XEM FILE ĐÃ TỒN TẠI CHƯA
+            if (File.Exists(physicalPath))
+            {
+                _logger.LogWarning("File với tên {FileName} đã tồn tại.", finalFileName);
+                // Ném lỗi này sẽ bị bắt bởi catch (ArgumentException ex) trong Controller
+                throw new ArgumentException($"Một file với tên '{finalFileName}' đã tồn tại trong thư mục 'Templates'. Vui lòng chọn tên khác.");
+            }
+
+            // 4. Lưu file
+            await using (var stream = new FileStream(physicalPath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            // 5. Trả về đường dẫn tương đối (ví dụ: /Templates/Bai_Giang_Phan_So.pptx)
+            var relativeUrl = $"/{subfolder}/{finalFileName}";
+            _logger.LogInformation($"File saved to: {relativeUrl}");
+            return relativeUrl;
         }
     }
 }

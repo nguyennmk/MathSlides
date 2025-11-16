@@ -1,4 +1,5 @@
 using MathSlides.Business_Object.Models.DTOs.GDPT;
+using MathSlides.Business_Object.Models.DTOs.Powerpoint;
 using MathSlides.Service.DTOs.Admin;
 
 namespace MathSlides.Service.Interfaces
@@ -12,6 +13,8 @@ namespace MathSlides.Service.Interfaces
         Task<TemplateDTO> CreateTemplateAsync(CreateTemplateRequestDTO request);
         Task<TemplateDTO> UpdateTemplateAsync(int templateId, UpdateTemplateRequestDTO request);
         Task<bool> DeleteTemplateAsync(int templateId);
+
+        Task<TemplateDTO> ImportPptxAsync(PowerpointImportRequest request);
     }
 }
 
