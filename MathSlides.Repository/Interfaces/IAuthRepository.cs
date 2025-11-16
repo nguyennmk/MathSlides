@@ -16,5 +16,10 @@ namespace MathSlides.Repository.Interfaces
         Task<User> CreateUserAsync(User user);
         Task<Role?> GetRoleByIdAsync(int roleId);
         Task<int> SaveChangesAsync();
+        Task<List<User>> GetAllUsersAsync();
+        Task<User?> GetUserByIdAsync(int userId);
+        Task<User> UpdateUserAsync(User user);
+        Task<bool> SoftDeleteUserAsync(int userId);
+        Task<List<Role>> GetAllRolesAsync();
     }
 }

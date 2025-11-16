@@ -15,6 +15,7 @@ namespace MathSlides.Business_Object.Models.Entities
         public int RoleID { get; set; }
         public DateTime CreatedAt { get; set; }
         public string RoleName { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
         public Role Role { get; set; } = null!;
     }
 }

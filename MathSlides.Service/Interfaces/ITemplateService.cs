@@ -1,4 +1,5 @@
 using MathSlides.Business_Object.Models.DTOs.GDPT;
+using MathSlides.Service.DTOs.Admin;
 
 namespace MathSlides.Service.Interfaces
 {
@@ -8,6 +9,9 @@ namespace MathSlides.Service.Interfaces
         Task<TemplateDetailDTO?> GetTemplateByIdAsync(int templateId);
 
         Task<string> GetTemplateJsonAsync(string templateName);
+        Task<TemplateDTO> CreateTemplateAsync(CreateTemplateRequestDTO request);
+        Task<TemplateDTO> UpdateTemplateAsync(int templateId, UpdateTemplateRequestDTO request);
+        Task<bool> DeleteTemplateAsync(int templateId);
     }
 }
 

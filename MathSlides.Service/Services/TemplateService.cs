@@ -1,8 +1,12 @@
 using MathSlides.Business_Object.Models.DTOs.GDPT;
+using MathSlides.Business_Object.Models.DTOs.Powerpoint;
 using MathSlides.Business_Object.Models.Entities;
 using MathSlides.Repository.Interfaces;
+using MathSlides.Service.DTOs.Admin;
 using MathSlides.Service.Interfaces;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace MathSlides.Service.Services
@@ -11,12 +15,16 @@ namespace MathSlides.Service.Services
     {
         private readonly ITemplateRepository _templateRepository;
 
+        private readonly IPowerpointService _powerpointService;
         private readonly IWebHostEnvironment _env;
+        private readonly ILogger<TemplateService> _logger;
 
-        public TemplateService(ITemplateRepository templateRepository, IWebHostEnvironment env)
+        public TemplateService(ITemplateRepository templateRepository, IWebHostEnvironment env, IPowerpointService powerpointService, ILogger<TemplateService> logger)
         {
             _templateRepository = templateRepository;
             _env = env;
+            _powerpointService = powerpointService;
+            _logger = logger;
         }
 
         public async Task<List<TemplateDTO>> GetAllTemplatesAsync(bool onlyActive = true)
@@ -87,6 +95,184 @@ namespace MathSlides.Service.Services
             }
 
             return await File.ReadAllTextAsync(templatePath);
+        }
+        public async Task<TemplateDTO> CreateTemplateAsync(CreateTemplateRequestDTO request)
+        {
+            // 1. Xử lý file Thumbnail (Lưu vào wwwroot/thumbnails)
+            string thumbnailUrl = await SaveFileAsync(request.ThumbnailFile, "thumbnails");
+
+            // 2. Xử lý file PPTX (Convert -> JSON và lưu vào wwwroot/templates)
+            PowerpointImportResponse importResult;
+            await using (var stream = request.PptxFile.OpenReadStream())
+            {
+                importResult = await _powerpointService.ImportPowerpointAsync(
+                    stream,
+                    request.PptxFile.FileName,
+                    request.Name,
+                    request.Description
+                );
+            }
+
+            // 3. Tạo Entity Template
+            var template = new Template
+            {
+                Name = request.Name,
+                Description = request.Description,
+                ThumbnailUrl = thumbnailUrl, // Đường dẫn tương đối của ảnh thumbnail
+                TemplatePath = importResult.TemplatePath, // Đường dẫn tương đối của file JSON
+                TemplateType = request.TemplateType,
+                Tags = request.Tags,
+                IsActive = true
+            };
+
+            // 4. Lưu vào DB
+            var createdTemplate = await _templateRepository.CreateTemplateAsync(template);
+
+            return MapTemplateToDTO(createdTemplate);
+        }
+
+        // === SỬA LOGIC CẬP NHẬT TEMPLATE ===
+        public async Task<TemplateDTO> UpdateTemplateAsync(int templateId, UpdateTemplateRequestDTO request)
+        {
+            var template = await _templateRepository.GetTemplateByIdAsync(templateId);
+            if (template == null)
+            {
+                throw new KeyNotFoundException($"Template with ID {templateId} not found.");
+            }
+
+            // 1. Cập nhật metadata
+            template.Name = request.Name;
+            template.Description = request.Description;
+            template.TemplateType = request.TemplateType;
+            template.Tags = request.Tags;
+            template.IsActive = request.IsActive;
+
+            // 2. Nếu có file Thumbnail mới, thay thế file cũ
+            if (request.ThumbnailFile != null && request.ThumbnailFile.Length > 0)
+            {
+                DeleteFile(template.ThumbnailUrl); // Xóa file thumbnail cũ
+                template.ThumbnailUrl = await SaveFileAsync(request.ThumbnailFile, "thumbnails"); // Lưu file mới
+            }
+
+            // 3. Nếu có file PPTX mới, thay thế file cũ
+            if (request.PptxFile != null && request.PptxFile.Length > 0)
+            {
+                DeleteFile(template.TemplatePath); // Xóa file JSON template cũ
+
+                PowerpointImportResponse importResult;
+                await using (var stream = request.PptxFile.OpenReadStream())
+                {
+                    importResult = await _powerpointService.ImportPowerpointAsync(
+                        stream,
+                        request.PptxFile.FileName,
+                        request.Name,
+                        request.Description
+                    );
+                }
+                template.TemplatePath = importResult.TemplatePath; // Cập nhật đường dẫn JSON mới
+            }
+
+            // 4. Lưu thay đổi vào DB
+            var updatedTemplate = await _templateRepository.UpdateTemplateAsync(template);
+            return MapTemplateToDTO(updatedTemplate);
+        }
+
+        public async Task<bool> DeleteTemplateAsync(int templateId)
+        {
+            var template = await _templateRepository.GetTemplateByIdAsync(templateId);
+            if (template == null)
+            {
+                return false;
+            }
+
+            // 1. Xóa file Thumbnail
+            DeleteFile(template.ThumbnailUrl);
+
+            // 2. Xóa file JSON Template
+            DeleteFile(template.TemplatePath);
+
+            // 3. Xóa record trong DB
+            return await _templateRepository.DeleteTemplateAsync(templateId);
+        }
+
+        // --- HÀM HELPER MỚI ĐỂ LƯU FILE ---
+
+        /// <summary>
+        /// Lưu file vào một thư mục con trong wwwroot và trả về đường dẫn tương đối.
+        /// </summary>
+        private async Task<string> SaveFileAsync(IFormFile file, string subfolder)
+        {
+            // Đảm bảo wwwroot tồn tại
+            var wwwRootPath = _env.WebRootPath;
+            if (string.IsNullOrEmpty(wwwRootPath))
+            {
+                wwwRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            }
+
+            var folderPath = Path.Combine(wwwRootPath, subfolder);
+
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            // Tạo tên file unique
+            var fileExtension = Path.GetExtension(file.FileName);
+            var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
+            var physicalPath = Path.Combine(folderPath, uniqueFileName);
+
+            await using (var stream = new FileStream(physicalPath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            // Trả về đường dẫn tương đối (ví dụ: /thumbnails/abc.png)
+            var relativeUrl = $"/{subfolder}/{uniqueFileName}";
+            _logger.LogInformation($"File saved to: {relativeUrl}");
+            return relativeUrl;
+        }
+
+        /// <summary>
+        /// Xóa file dựa trên đường dẫn tương đối từ wwwroot.
+        /// </summary>
+        private void DeleteFile(string relativePath)
+        {
+            if (string.IsNullOrEmpty(relativePath)) return;
+            try
+            {
+                var wwwRootPath = _env.WebRootPath;
+                if (string.IsNullOrEmpty(wwwRootPath))
+                {
+                    wwwRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                }
+
+                var physicalPath = Path.Combine(wwwRootPath, relativePath.TrimStart('/'));
+
+                if (File.Exists(physicalPath))
+                {
+                    File.Delete(physicalPath);
+                    _logger.LogInformation($"Deleted file: {physicalPath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error deleting file: {relativePath}");
+            }
+        }
+
+        // Hàm helper map
+        private TemplateDTO MapTemplateToDTO(Template t)
+        {
+            return new TemplateDTO
+            {
+                TemplateID = t.TemplateID,
+                Name = t.Name,
+                Description = t.Description,
+                ThumbnailUrl = t.ThumbnailUrl,
+                TemplateType = t.TemplateType,
+                Tags = t.Tags,
+                IsActive = t.IsActive
+            };
         }
     }
 }

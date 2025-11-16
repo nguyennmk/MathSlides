@@ -1,8 +1,11 @@
-﻿using MathSlides.Business_Object.Models.DTOs.Auth;
+﻿using BCrypt.Net;
+using MathSlides.Business_Object.Models.DTOs.Auth;
 using MathSlides.Business_Object.Models.Entities;
 using MathSlides.Repository.Interfaces;
+using MathSlides.Service.DTOs.Auth;
 using MathSlides.Service.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -10,7 +13,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using BCrypt.Net;
 
 namespace MathSlides.Service.Services
 {
@@ -18,11 +20,13 @@ namespace MathSlides.Service.Services
     {
         private readonly IAuthRepository _authRepository;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthService> _logger;
 
-        public AuthService(IAuthRepository authRepository, IConfiguration configuration)
+        public AuthService(IAuthRepository authRepository, IConfiguration configuration, ILogger<AuthService> logger)
         {
             _authRepository = authRepository;
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
@@ -62,6 +66,10 @@ namespace MathSlides.Service.Services
             if (user == null)
                 throw new UnauthorizedAccessException("Invalid Email or password");
 
+            if (user == null || !user.IsActive)
+            {
+                throw new UnauthorizedAccessException("Invalid Email or password");
+            }
             // Verify password - Sửa lỗi BCrypt
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 throw new UnauthorizedAccessException("Invalid Email or password");
@@ -149,6 +157,49 @@ namespace MathSlides.Service.Services
             };
 
             return Task.FromResult(userInfo);
+        }
+        public async Task<UserInfo> UpdateProfileAsync(int userIdFromToken, int userIdFromRoute, UpdateProfileRequestDTO request)
+        {
+            // User ID trong token (người đang đăng nhập) phải khớp với User ID trên route (người bị sửa)
+            if (userIdFromToken != userIdFromRoute)
+            {
+                _logger.LogWarning($"Security violation: User {userIdFromToken} attempted to update profile of user {userIdFromRoute}.");
+                throw new UnauthorizedAccessException("Bạn chỉ có thể cập nhật thông tin của chính mình.");
+            }
+
+            var user = await _authRepository.GetUserByIdAsync(userIdFromToken);
+            if (user == null || !user.IsActive)
+            {
+                throw new KeyNotFoundException("Không tìm thấy tài khoản hoặc tài khoản đã bị khóa.");
+            }
+
+            // 3. Kiểm tra Username/Email trùng lặp (với user khác)
+            if (user.Email != request.Email && await _authRepository.EmailExistsAsync(request.Email))
+            {
+                throw new ArgumentException("Email này đã được sử dụng bởi tài khoản khác.");
+            }
+            if (user.Username != request.Username && await _authRepository.UsernameExistsAsync(request.Username))
+            {
+                throw new ArgumentException("Username này đã được sử dụng bởi tài khoản khác.");
+            }
+
+            user.Username = request.Username;
+            user.Email = request.Email;
+
+            if (!string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            }
+
+            var updatedUser = await _authRepository.UpdateUserAsync(user);
+
+            return new UserInfo
+            {
+                UserID = updatedUser.UserID,
+                Username = updatedUser.Username,
+                Email = updatedUser.Email,
+                Role = updatedUser.Role?.Name ?? updatedUser.RoleName
+            };
         }
     }
 }

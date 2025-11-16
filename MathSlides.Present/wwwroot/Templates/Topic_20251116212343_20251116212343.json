@@ -1,0 +1,644 @@
+{
+  "SlideCount": 18,
+  "Slides": [
+    {
+      "SlideId": "rId6",
+      "Shapes": [
+        {
+          "ShapeId": 2,
+          "Name": "Freeform 2",
+          "Text": ""
+        },
+        {
+          "ShapeId": 3,
+          "Name": "Freeform 3",
+          "Text": ""
+        },
+        {
+          "ShapeId": 4,
+          "Name": "Freeform 4",
+          "Text": ""
+        },
+        {
+          "ShapeId": 5,
+          "Name": "Freeform 5",
+          "Text": ""
+        },
+        {
+          "ShapeId": 6,
+          "Name": "Freeform 6",
+          "Text": ""
+        },
+        {
+          "ShapeId": 7,
+          "Name": "Freeform 7",
+          "Text": ""
+        },
+        {
+          "ShapeId": 8,
+          "Name": "Freeform 8",
+          "Text": ""
+        },
+        {
+          "ShapeId": 9,
+          "Name": "Freeform 9",
+          "Text": ""
+        },
+        {
+          "ShapeId": 10,
+          "Name": "Freeform 10",
+          "Text": ""
+        },
+        {
+          "ShapeId": 11,
+          "Name": "Freeform 11",
+          "Text": ""
+        },
+        {
+          "ShapeId": 15,
+          "Name": "Freeform 15",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId7",
+      "Shapes": [
+        {
+          "ShapeId": 2,
+          "Name": "Freeform 2",
+          "Text": ""
+        },
+        {
+          "ShapeId": 3,
+          "Name": "Freeform 3",
+          "Text": ""
+        },
+        {
+          "ShapeId": 4,
+          "Name": "TextBox 4",
+          "Text": ""
+        },
+        {
+          "ShapeId": 5,
+          "Name": "TextBox 5",
+          "Text": ""
+        },
+        {
+          "ShapeId": 9,
+          "Name": "TextBox 9",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId8",
+      "Shapes": [
+        {
+          "ShapeId": 2,
+          "Name": "AutoShape 2",
+          "Text": ""
+        },
+        {
+          "ShapeId": 8,
+          "Name": "Freeform 8",
+          "Text": ""
+        },
+        {
+          "ShapeId": 18,
+          "Name": "TextBox 18",
+          "Text": ""
+        },
+        {
+          "ShapeId": 19,
+          "Name": "TextBox 19",
+          "Text": ""
+        },
+        {
+          "ShapeId": 20,
+          "Name": "TextBox 20",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId9",
+      "Shapes": [
+        {
+          "ShapeId": 4,
+          "Name": "TextBox 4",
+          "Text": ""
+        },
+        {
+          "ShapeId": 5,
+          "Name": "TextBox 5",
+          "Text": ""
+        },
+        {
+          "ShapeId": 9,
+          "Name": "TextBox 9",
+          "Text": ""
+        },
+        {
+          "ShapeId": 10,
+          "Name": "TextBox 10",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId10",
+      "Shapes": [
+        {
+          "ShapeId": 2,
+          "Name": "Freeform 2",
+          "Text": ""
+        },
+        {
+          "ShapeId": 3,
+          "Name": "Freeform 3",
+          "Text": ""
+        },
+        {
+          "ShapeId": 6,
+          "Name": "TextBox 6",
+          "Text": ""
+        },
+        {
+          "ShapeId": 7,
+          "Name": "TextBox 7",
+          "Text": ""
+        },
+        {
+          "ShapeId": 8,
+          "Name": "TextBox 8",
+          "Text": ""
+        },
+        {
+          "ShapeId": 9,
+          "Name": "TextBox 9",
+          "Text": ""
+        },
+        {
+          "ShapeId": 10,
+          "Name": "TextBox 10",
+          "Text": ""
+        },
+        {
+          "ShapeId": 11,
+          "Name": "TextBox 11",
+          "Text": ""
+        },
+        {
+          "ShapeId": 12,
+          "Name": "TextBox 12",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId11",
+      "Shapes": [
+        {
+          "ShapeId": 5,
+          "Name": "Freeform 5",
+          "Text": ""
+        },
+        {
+          "ShapeId": 6,
+          "Name": "TextBox 6",
+          "Text": ""
+        },
+        {
+          "ShapeId": 7,
+          "Name": "TextBox 7",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId12",
+      "Shapes": [
+        {
+          "ShapeId": 2,
+          "Name": "Freeform 2",
+          "Text": ""
+        },
+        {
+          "ShapeId": 3,
+          "Name": "Freeform 3",
+          "Text": ""
+        },
+        {
+          "ShapeId": 4,
+          "Name": "Freeform 4",
+          "Text": ""
+        },
+        {
+          "ShapeId": 5,
+          "Name": "Freeform 5",
+          "Text": ""
+        },
+        {
+          "ShapeId": 6,
+          "Name": "TextBox 6",
+          "Text": ""
+        },
+        {
+          "ShapeId": 7,
+          "Name": "TextBox 7",
+          "Text": ""
+        },
+        {
+          "ShapeId": 11,
+          "Name": "TextBox 11",
+          "Text": ""
+        },
+        {
+          "ShapeId": 12,
+          "Name": "TextBox 12",
+          "Text": ""
+        },
+        {
+          "ShapeId": 13,
+          "Name": "TextBox 13",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId13",
+      "Shapes": [
+        {
+          "ShapeId": 2,
+          "Name": "Freeform 2",
+          "Text": ""
+        },
+        {
+          "ShapeId": 3,
+          "Name": "Freeform 3",
+          "Text": ""
+        },
+        {
+          "ShapeId": 4,
+          "Name": "Freeform 4",
+          "Text": ""
+        },
+        {
+          "ShapeId": 5,
+          "Name": "Freeform 5",
+          "Text": ""
+        },
+        {
+          "ShapeId": 8,
+          "Name": "Freeform 8",
+          "Text": ""
+        },
+        {
+          "ShapeId": 9,
+          "Name": "Freeform 9",
+          "Text": ""
+        },
+        {
+          "ShapeId": 10,
+          "Name": "Freeform 10",
+          "Text": ""
+        },
+        {
+          "ShapeId": 11,
+          "Name": "TextBox 11",
+          "Text": ""
+        },
+        {
+          "ShapeId": 12,
+          "Name": "TextBox 12",
+          "Text": ""
+        },
+        {
+          "ShapeId": 13,
+          "Name": "TextBox 13",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId14",
+      "Shapes": [
+        {
+          "ShapeId": 2,
+          "Name": "Freeform 2",
+          "Text": ""
+        },
+        {
+          "ShapeId": 3,
+          "Name": "Freeform 3",
+          "Text": ""
+        },
+        {
+          "ShapeId": 4,
+          "Name": "Freeform 4",
+          "Text": ""
+        },
+        {
+          "ShapeId": 5,
+          "Name": "Freeform 5",
+          "Text": ""
+        },
+        {
+          "ShapeId": 6,
+          "Name": "Freeform 6",
+          "Text": ""
+        },
+        {
+          "ShapeId": 7,
+          "Name": "Freeform 7",
+          "Text": ""
+        },
+        {
+          "ShapeId": 11,
+          "Name": "TextBox 11",
+          "Text": ""
+        },
+        {
+          "ShapeId": 12,
+          "Name": "TextBox 12",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId15",
+      "Shapes": [
+        {
+          "ShapeId": 14,
+          "Name": "TextBox 14",
+          "Text": ""
+        },
+        {
+          "ShapeId": 15,
+          "Name": "TextBox 15",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId16",
+      "Shapes": [
+        {
+          "ShapeId": 2,
+          "Name": "TextBox 2",
+          "Text": ""
+        },
+        {
+          "ShapeId": 3,
+          "Name": "TextBox 3",
+          "Text": ""
+        },
+        {
+          "ShapeId": 4,
+          "Name": "TextBox 4",
+          "Text": ""
+        },
+        {
+          "ShapeId": 9,
+          "Name": "Freeform 9",
+          "Text": ""
+        },
+        {
+          "ShapeId": 10,
+          "Name": "TextBox 10",
+          "Text": ""
+        },
+        {
+          "ShapeId": 11,
+          "Name": "Freeform 11",
+          "Text": ""
+        },
+        {
+          "ShapeId": 12,
+          "Name": "TextBox 12",
+          "Text": ""
+        },
+        {
+          "ShapeId": 13,
+          "Name": "TextBox 13",
+          "Text": ""
+        },
+        {
+          "ShapeId": 14,
+          "Name": "Freeform 14",
+          "Text": ""
+        },
+        {
+          "ShapeId": 15,
+          "Name": "TextBox 15",
+          "Text": ""
+        },
+        {
+          "ShapeId": 16,
+          "Name": "TextBox 16",
+          "Text": ""
+        },
+        {
+          "ShapeId": 17,
+          "Name": "TextBox 17",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId17",
+      "Shapes": [
+        {
+          "ShapeId": 5,
+          "Name": "TextBox 5",
+          "Text": ""
+        },
+        {
+          "ShapeId": 6,
+          "Name": "TextBox 6",
+          "Text": ""
+        },
+        {
+          "ShapeId": 7,
+          "Name": "TextBox 7",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId18",
+      "Shapes": [
+        {
+          "ShapeId": 9,
+          "Name": "Freeform 9",
+          "Text": ""
+        },
+        {
+          "ShapeId": 10,
+          "Name": "TextBox 10",
+          "Text": ""
+        },
+        {
+          "ShapeId": 11,
+          "Name": "Freeform 11",
+          "Text": ""
+        },
+        {
+          "ShapeId": 12,
+          "Name": "TextBox 12",
+          "Text": ""
+        },
+        {
+          "ShapeId": 13,
+          "Name": "TextBox 13",
+          "Text": ""
+        },
+        {
+          "ShapeId": 14,
+          "Name": "TextBox 14",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId19",
+      "Shapes": [
+        {
+          "ShapeId": 2,
+          "Name": "Freeform 2",
+          "Text": ""
+        },
+        {
+          "ShapeId": 3,
+          "Name": "Freeform 3",
+          "Text": ""
+        },
+        {
+          "ShapeId": 4,
+          "Name": "Freeform 4",
+          "Text": ""
+        },
+        {
+          "ShapeId": 20,
+          "Name": "TextBox 20",
+          "Text": ""
+        },
+        {
+          "ShapeId": 21,
+          "Name": "TextBox 21",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId20",
+      "Shapes": [
+        {
+          "ShapeId": 2,
+          "Name": "TextBox 2",
+          "Text": ""
+        },
+        {
+          "ShapeId": 23,
+          "Name": "TextBox 23",
+          "Text": ""
+        },
+        {
+          "ShapeId": 24,
+          "Name": "TextBox 24",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId21",
+      "Shapes": [
+        {
+          "ShapeId": 5,
+          "Name": "Freeform 5",
+          "Text": ""
+        },
+        {
+          "ShapeId": 6,
+          "Name": "TextBox 6",
+          "Text": ""
+        },
+        {
+          "ShapeId": 7,
+          "Name": "TextBox 7",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId22",
+      "Shapes": [
+        {
+          "ShapeId": 2,
+          "Name": "TextBox 2",
+          "Text": ""
+        },
+        {
+          "ShapeId": 3,
+          "Name": "TextBox 3",
+          "Text": ""
+        },
+        {
+          "ShapeId": 7,
+          "Name": "TextBox 7",
+          "Text": ""
+        },
+        {
+          "ShapeId": 8,
+          "Name": "TextBox 8",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    },
+    {
+      "SlideId": "rId23",
+      "Shapes": [
+        {
+          "ShapeId": 2,
+          "Name": "Freeform 2",
+          "Text": ""
+        },
+        {
+          "ShapeId": 10,
+          "Name": "TextBox 10",
+          "Text": ""
+        },
+        {
+          "ShapeId": 11,
+          "Name": "TextBox 11",
+          "Text": ""
+        },
+        {
+          "ShapeId": 12,
+          "Name": "TextBox 12",
+          "Text": ""
+        }
+      ],
+      "Texts": []
+    }
+  ],
+  "CreatedAt": "2025-11-16T14:23:43.6060163Z"
+}

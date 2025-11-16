@@ -1,19 +1,23 @@
 ﻿using MathSlides.Business_Object.Models.DTOs.Auth;
+using MathSlides.Service.DTOs.Auth;
 using MathSlides.Service.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace MathSlides.Present.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, ILogger<AuthController> logger)
         {
             _authService = authService;
+            _logger = logger;
         }
 
         [HttpPost("register")]
@@ -83,6 +87,53 @@ namespace MathSlides.Present.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "An error occurred while retrieving the profile." });
+            }
+        }
+        /// <summary>
+        /// Người dùng tự cập nhật thông tin cá nhân (Username, Email, Password)
+        /// </summary>
+        // PUT: api/auth/users/5
+        [HttpPut("users/{id}")]
+        [Authorize] 
+        public async Task<IActionResult> UpdateProfile(int id, [FromBody] UpdateProfileRequestDTO request)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new { message = "User ID không hợp lệ." });
+            }
+
+            try
+            {
+                // Lấy User ID từ token JWT của người đang đăng nhập
+                var userIdFromTokenString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!int.TryParse(userIdFromTokenString, out int userIdFromToken))
+                {
+                    return Unauthorized(new { message = "Token không hợp lệ." });
+                }
+
+                // Gọi service với cả 2 ID để check bảo mật
+                var updatedUser = await _authService.UpdateProfileAsync(userIdFromToken, id, request);
+                return Ok(updatedUser);
+            }
+            catch (UnauthorizedAccessException ex) // Lỗi 401/403: Cố sửa profile người khác
+            {
+                _logger.LogWarning(ex.Message);
+                return Forbid(ex.Message); // 403 Forbidden
+            }
+            catch (KeyNotFoundException ex) // Lỗi 404: Không tìm thấy user
+            {
+                _logger.LogWarning(ex.Message);
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ArgumentException ex) // Lỗi 400: Trùng email/username
+            {
+                _logger.LogWarning(ex.Message);
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Lỗi khi cập nhật profile cho user {id}");
+                return StatusCode(500, new { message = "Lỗi máy chủ nội bộ." });
             }
         }
     }
