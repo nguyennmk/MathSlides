@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MathSlides.Present.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {

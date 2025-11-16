@@ -62,6 +62,10 @@ namespace MathSlides.Service.Services
             if (user == null)
                 throw new UnauthorizedAccessException("Invalid Email or password");
 
+            if (user == null || !user.IsActive)
+            {
+                throw new UnauthorizedAccessException("Invalid Email or password");
+            }
             // Verify password - Sửa lỗi BCrypt
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 throw new UnauthorizedAccessException("Invalid Email or password");
