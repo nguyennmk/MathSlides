@@ -10,12 +10,9 @@ using System.Threading.Tasks;
 
 namespace MathSlides.Repository.Repositories
 {
-    /// <summary>
-    /// Triển khai nghiệp vụ CRUD cho Content
-    /// </summary>
+
     public class ContentRepository : IContentRepository
     {
-        // Dùng AuthDbContext như file GDPTRepository của bạn
         private readonly MathSlidesAuthDbContext _context;
 
         public ContentRepository(MathSlidesAuthDbContext context)
@@ -25,7 +22,6 @@ namespace MathSlides.Repository.Repositories
 
         public async Task<List<Content>> CreateBulkContentAsync(List<Content> contents)
         {
-            // 'contents' đã chứa Formulas và Examples
             await _context.Contents.AddRangeAsync(contents);
             await _context.SaveChangesAsync();
             return contents;
