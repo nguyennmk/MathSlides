@@ -6,6 +6,7 @@ using MathSlides.Service.DTOs.Admin;
 using MathSlides.Service.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace MathSlides.Service.Services
@@ -16,12 +17,14 @@ namespace MathSlides.Service.Services
 
         private readonly IPowerpointService _powerpointService;
         private readonly IWebHostEnvironment _env;
+        private readonly ILogger<TemplateService> _logger;
 
-        public TemplateService(ITemplateRepository templateRepository, IWebHostEnvironment env, IPowerpointService powerpointService)
+        public TemplateService(ITemplateRepository templateRepository, IWebHostEnvironment env, IPowerpointService powerpointService, ILogger<TemplateService> logger)
         {
             _templateRepository = templateRepository;
             _env = env;
             _powerpointService = powerpointService;
+            _logger = logger;
         }
 
         public async Task<List<TemplateDTO>> GetAllTemplatesAsync(bool onlyActive = true)
@@ -95,10 +98,10 @@ namespace MathSlides.Service.Services
         }
         public async Task<TemplateDTO> CreateTemplateAsync(CreateTemplateRequestDTO request)
         {
-            // 1. Xử lý file Thumbnail
+            // 1. Xử lý file Thumbnail (Lưu vào wwwroot/thumbnails)
             string thumbnailUrl = await SaveFileAsync(request.ThumbnailFile, "thumbnails");
 
-            // 2. Xử lý file PPTX (Convert -> JSON và lưu)
+            // 2. Xử lý file PPTX (Convert -> JSON và lưu vào wwwroot/templates)
             PowerpointImportResponse importResult;
             await using (var stream = request.PptxFile.OpenReadStream())
             {
@@ -144,14 +147,14 @@ namespace MathSlides.Service.Services
             template.Tags = request.Tags;
             template.IsActive = request.IsActive;
 
-            // 2. Nếu có file Thumbnail mới
+            // 2. Nếu có file Thumbnail mới, thay thế file cũ
             if (request.ThumbnailFile != null && request.ThumbnailFile.Length > 0)
             {
                 DeleteFile(template.ThumbnailUrl); // Xóa file thumbnail cũ
                 template.ThumbnailUrl = await SaveFileAsync(request.ThumbnailFile, "thumbnails"); // Lưu file mới
             }
 
-            // 3. Nếu có file PPTX mới
+            // 3. Nếu có file PPTX mới, thay thế file cũ
             if (request.PptxFile != null && request.PptxFile.Length > 0)
             {
                 DeleteFile(template.TemplatePath); // Xóa file JSON template cũ
@@ -199,7 +202,13 @@ namespace MathSlides.Service.Services
         /// </summary>
         private async Task<string> SaveFileAsync(IFormFile file, string subfolder)
         {
+            // Đảm bảo wwwroot tồn tại
             var wwwRootPath = _env.WebRootPath;
+            if (string.IsNullOrEmpty(wwwRootPath))
+            {
+                wwwRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            }
+
             var folderPath = Path.Combine(wwwRootPath, subfolder);
 
             if (!Directory.Exists(folderPath))
@@ -218,7 +227,9 @@ namespace MathSlides.Service.Services
             }
 
             // Trả về đường dẫn tương đối (ví dụ: /thumbnails/abc.png)
-            return $"/{subfolder}/{uniqueFileName}";
+            var relativeUrl = $"/{subfolder}/{uniqueFileName}";
+            _logger.LogInformation($"File saved to: {relativeUrl}");
+            return relativeUrl;
         }
 
         /// <summary>
@@ -229,14 +240,23 @@ namespace MathSlides.Service.Services
             if (string.IsNullOrEmpty(relativePath)) return;
             try
             {
-                var physicalPath = Path.Combine(_env.WebRootPath, relativePath.TrimStart('/'));
+                var wwwRootPath = _env.WebRootPath;
+                if (string.IsNullOrEmpty(wwwRootPath))
+                {
+                    wwwRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                }
+
+                var physicalPath = Path.Combine(wwwRootPath, relativePath.TrimStart('/'));
+
                 if (File.Exists(physicalPath))
                 {
                     File.Delete(physicalPath);
+                    _logger.LogInformation($"Deleted file: {physicalPath}");
                 }
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, $"Error deleting file: {relativePath}");
             }
         }
 
