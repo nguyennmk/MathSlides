@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -21,12 +22,14 @@ namespace MathSlides.Service.Services
         private readonly IAuthRepository _authRepository;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
+        private readonly IEmailService _emailService;
 
-        public AuthService(IAuthRepository authRepository, IConfiguration configuration, ILogger<AuthService> logger)
+        public AuthService(IAuthRepository authRepository, IConfiguration configuration, ILogger<AuthService> logger, IEmailService emailService)
         {
             _authRepository = authRepository;
             _configuration = configuration;
             _logger = logger;
+            _emailService = emailService;
         }
 
         public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
@@ -200,6 +203,97 @@ namespace MathSlides.Service.Services
                 Email = updatedUser.Email,
                 Role = updatedUser.Role?.Name ?? updatedUser.RoleName
             };
+        }
+        public async Task<bool> ForgotPasswordAsync(ForgotPasswordRequest request)
+        {
+            var user = await _authRepository.GetUserByEmailAsync(request.Email);
+
+            if (user == null || !user.IsActive)
+            {
+                _logger.LogWarning($"Yêu cầu ForgotPassword cho email không tồn tại hoặc bị khóa: {request.Email}");
+                return true;
+            }
+
+            var code = GenerateComplexRandomToken(16);
+
+            user.PasswordResetToken = BCrypt.Net.BCrypt.HashPassword(code);
+
+            user.PasswordResetTokenExpires = DateTime.UtcNow.AddMinutes(5);
+
+            await _authRepository.UpdateUserAsync(user);
+
+            try
+            {
+                await _emailService.SendPasswordResetEmailAsync(user.Email, code);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Lỗi khi gửi email reset password cho {user.Email}");
+                return true;
+            }
+        }
+
+        public async Task<bool> ResetPasswordAsync(ResetPasswordRequest request)
+        {
+            var user = await _authRepository.GetUserByEmailAsync(request.Email);
+
+            if (user == null || !user.IsActive)
+            {
+                _logger.LogWarning($"ResetPassword thất bại: User không tồn tại hoặc bị khóa ({request.Email})");
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(user.PasswordResetToken) ||
+                user.PasswordResetTokenExpires == null ||
+                user.PasswordResetTokenExpires < DateTime.UtcNow)
+            {
+                _logger.LogWarning($"ResetPassword thất bại: Token hết hạn hoặc không tồn tại cho ({request.Email})");
+                return false;
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(request.Token, user.PasswordResetToken))
+            {
+                _logger.LogWarning($"ResetPassword thất bại: Token không hợp lệ cho ({request.Email})");
+                return false;
+            }
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExpires = null;
+
+            await _authRepository.UpdateUserAsync(user);
+            _logger.LogInformation($"ResetPassword thành công cho {request.Email}");
+            return true;
+        }
+
+        private string GenerateComplexRandomToken(int length)
+        {
+            const string lowercase = "abcdefghijklmnopqrstuvwxyz";
+            const string uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string numbers = "0123456789";
+            const string special = "!@#$%^&*()_+-=[]{}";
+
+            var charSet = new StringBuilder();
+            charSet.Append(lowercase);
+            charSet.Append(uppercase);
+            charSet.Append(numbers);
+            charSet.Append(special);
+
+            var result = new StringBuilder();
+
+            result.Append(lowercase[RandomNumberGenerator.GetInt32(lowercase.Length)]);
+            result.Append(uppercase[RandomNumberGenerator.GetInt32(uppercase.Length)]);
+            result.Append(numbers[RandomNumberGenerator.GetInt32(numbers.Length)]);
+            result.Append(special[RandomNumberGenerator.GetInt32(special.Length)]);
+
+            string allChars = charSet.ToString();
+            for (int i = 0; i < length - 4; i++)
+            {
+                result.Append(allChars[RandomNumberGenerator.GetInt32(allChars.Length)]);
+            }
+            return new string(result.ToString().ToCharArray().OrderBy(c => RandomNumberGenerator.GetInt32(0, int.MaxValue)).ToArray());
         }
     }
 }

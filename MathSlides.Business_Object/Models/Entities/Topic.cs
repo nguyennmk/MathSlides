@@ -12,6 +12,7 @@ namespace MathSlides.Business_Object.Models.Entities
         // Navigation properties
         public Class Class { get; set; } = null!;
         public Strand Strand { get; set; } = null!;
+        public bool IsActive { get; set; } = true;
         public ICollection<Content> Contents { get; set; } = new List<Content>();
         public ICollection<TopicVersion> TopicVersions { get; set; } = new List<TopicVersion>();
         public ICollection<Slide> Slides { get; set; } = new List<Slide>();

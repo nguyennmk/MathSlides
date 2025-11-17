@@ -7,11 +7,13 @@ namespace MathSlides.Service.Interfaces
     {
         Task<ImportGDPTResponse> ImportGDPTDataAsync(ImportGDPTRequest request);
         Task<List<CurriculumDTO>> GetCurriculumByGradeAndClassAsync(string gradeName, string className);
+        Task<List<CurriculumDTO>> GetCurriculumByGradeAndClassAsync(string gradeName, string className, bool? isActive);
         Task<List<GradeDTO>> GetAllGradesWithClassesAsync();
         Task<List<ClassDTO>> GetClassesByGradeIdAsync(int gradeId);
         Task<List<ClassDTO>> GetClassesByGradeNameAsync(string gradeName);
         Task<List<ClassDTO>> GetAllClassesAsync();
         Task<CurriculumDTO> UpdateTopicAsync(int topicId, UpdateTopicRequestDTO request);
+        Task<bool> SoftDeleteTopicAsync(int topicId);
     }
 }
 

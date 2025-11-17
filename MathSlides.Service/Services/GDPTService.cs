@@ -238,7 +238,46 @@ namespace MathSlides.Service.Services
                 }).ToList()
             }).ToList();
         }
+        public async Task<List<CurriculumDTO>> GetCurriculumByGradeAndClassAsync(string gradeName, string className, bool? isActive)
+        {
+            var topics = await _gdptRepository.GetTopicsByGradeAndClassAsync(gradeName, className, isActive);
 
+            return topics.Select(topic => new CurriculumDTO
+            {
+                TopicID = topic.TopicID,
+                TopicName = topic.Name,
+                ClassName = topic.Class.Name,
+                GradeName = topic.Class.Grade.Name,
+                StrandName = topic.Strand.Name,
+                Objectives = topic.Objectives,
+                IsActive = topic.IsActive,
+                Source = topic.Source,
+                Contents = topic.Contents.Select(content => new ContentDTO
+                {
+                    ContentID = content.ContentID,
+                    Title = content.Title,
+                    Summary = content.Summary,
+                    Formulas = content.Formulas.Select(f => new FormulaDTO
+                    {
+                        FormulaID = f.FormulaID,
+                        FormulaText = f.FormulaText,
+                        Explanation = f.Explanation
+                    }).ToList(),
+                    Examples = content.Examples.Select(e => new ExampleDTO
+                    {
+                        ExampleID = e.ExampleID,
+                        ExampleText = e.ExampleText
+                    }).ToList(),
+                    Media = content.Media.Select(m => new MediaDTO
+                    {
+                        MediaID = m.MediaID,
+                        Type = m.Type,
+                        Url = m.Url,
+                        Description = m.Description
+                    }).ToList()
+                }).ToList()
+            }).ToList();
+        }
         public async Task<List<GradeDTO>> GetAllGradesWithClassesAsync()
         {
             var grades = await _gdptRepository.GetAllGradesAsync();
@@ -330,7 +369,10 @@ namespace MathSlides.Service.Services
 
             return MapTopicToCurriculumDTO(fullUpdatedTopic!);
         }
-
+        public async Task<bool> SoftDeleteTopicAsync(int topicId)
+        {
+            return await _gdptRepository.SoftDeleteTopicAsync(topicId);
+        }
     }
 }
 

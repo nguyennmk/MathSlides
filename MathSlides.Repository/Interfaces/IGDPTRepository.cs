@@ -38,6 +38,7 @@ namespace MathSlides.Repository.Interfaces
 
         // Curriculum operations
         Task<List<Topic>> GetTopicsByGradeAndClassAsync(string gradeName, string className);
+        Task<List<Topic>> GetTopicsByGradeAndClassAsync(string gradeName, string className, bool? isActive);
 
         // Grade and Class operations for selection
         Task<List<Grade>> GetAllGradesAsync();
@@ -48,6 +49,7 @@ namespace MathSlides.Repository.Interfaces
         Task<int> SaveChangesAsync();
         Task<Topic?> GetTopicByIdAsync(int topicId);
         Task<Topic> UpdateTopicAsync(Topic topic);
+        Task<bool> SoftDeleteTopicAsync(int topicId);
     }
 }
 
