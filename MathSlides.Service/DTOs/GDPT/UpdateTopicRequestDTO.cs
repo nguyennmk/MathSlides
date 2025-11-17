@@ -23,5 +23,7 @@ namespace MathSlides.Service.DTOs.GDPT
 
         [StringLength(255)]
         public string? Source { get; set; }
+
+        public bool IsActive { get; set; }
     }
 }

@@ -361,6 +361,7 @@ namespace MathSlides.Service.Services
             topic.Source = request.Source;
             topic.ClassID = request.ClassID;
             topic.StrandID = request.StrandID;
+            topic.IsActive = request.IsActive;
 
 
             var updatedTopic = await _gdptRepository.UpdateTopicAsync(topic);
