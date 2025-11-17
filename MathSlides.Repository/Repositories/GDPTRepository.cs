@@ -159,6 +159,32 @@ namespace MathSlides.Repository.Repositories
                 .OrderBy(t => t.Name)
                 .ToListAsync();
         }
+        public async Task<List<Topic>> GetTopicsByGradeAndClassAsync(string gradeName, string className, bool? isActive)
+        {
+            var query = _context.Topics
+                .Include(t => t.Class)
+                    .ThenInclude(c => c!.Grade)
+                .Include(t => t.Strand)
+                .Include(t => t.Contents)
+                    .ThenInclude(c => c.Formulas)
+                .Include(t => t.Contents)
+                    .ThenInclude(c => c.Examples)
+                .Include(t => t.Contents)
+                    .ThenInclude(c => c.Media)
+                .AsQueryable();
+
+            query = query.Where(t =>
+                t.Class.Grade.Name == gradeName &&
+                t.Class.Name == className);
+
+            if (isActive.HasValue)
+            {
+                query = query.Where(t => t.IsActive == isActive.Value);
+            }
+            return await query
+                .OrderBy(t => t.Name)
+                .ToListAsync();
+        }
 
         // Grade and Class operations for selection
         public async Task<List<Grade>> GetAllGradesAsync()
@@ -215,7 +241,20 @@ namespace MathSlides.Repository.Repositories
             await _context.SaveChangesAsync();
             return topic;
         }
+        public async Task<bool> SoftDeleteTopicAsync(int topicId)
+        {
+            var topic = await _context.Topics.FindAsync(topicId);
+            if (topic == null)
+            {
+                return false;
+            }
 
+            topic.IsActive = false;
+
+            _context.Topics.Update(topic);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }
 

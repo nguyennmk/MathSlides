@@ -129,7 +129,8 @@ namespace MathSlides.Present.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetCurriculum(
             [FromQuery] string gradeName,
-            [FromQuery] string className)
+            [FromQuery] string className, 
+            [FromQuery(Name = "is-active")] bool? isActive)
         {
             try
             {
@@ -146,7 +147,7 @@ namespace MathSlides.Present.Controllers
 
                 _logger.LogInformation($"Lấy giáo trình cho Grade: {gradeName}, Class: {className}");
 
-                var curriculum = await _gdptService.GetCurriculumByGradeAndClassAsync(gradeName, className);
+                var curriculum = await _gdptService.GetCurriculumByGradeAndClassAsync(gradeName, className, isActive);
 
                 if (curriculum == null || !curriculum.Any())
                 {
@@ -190,7 +191,31 @@ namespace MathSlides.Present.Controllers
                 return StatusCode(500, new { message = "Lỗi máy chủ nội bộ.", details = ex.Message });
             }
         }
+        [HttpDelete("topics/{id}")]
+        [Authorize(Roles = "Admin,Teacher")]
+        public async Task<IActionResult> DeleteTopic(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new { message = "Topic ID không hợp lệ." });
+            }
 
+            try
+            {
+                var success = await _gdptService.SoftDeleteTopicAsync(id);
+
+                if (!success)
+                {
+                    return NotFound(new { message = $"Không tìm thấy Topic với ID: {id} (hoặc đã bị xóa)" });
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Lỗi khi xóa mềm topic {id}");
+                return StatusCode(500, new { message = "Lỗi máy chủ nội bộ.", details = ex.Message });
+            }
+        }
     }
 }
 

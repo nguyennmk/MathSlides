@@ -8,6 +8,7 @@ namespace MathSlides.Business_Object.Models.DTOs.GDPT
         public string GradeName { get; set; } = string.Empty;
         public string StrandName { get; set; } = string.Empty;
         public string? Objectives { get; set; }
+        public bool IsActive { get; set; }
         public string? Source { get; set; }
         public List<ContentDTO> Contents { get; set; } = new List<ContentDTO>();
     }
