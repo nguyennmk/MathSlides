@@ -16,5 +16,7 @@ namespace MathSlides.Service.Interfaces
         Task<LogoutResponse> LogoutAsync();
         Task<UserInfo> GetProfileAsync(ClaimsPrincipal user);
         Task<UserInfo> UpdateProfileAsync(int userIdFromToken, int userIdFromRoute, UpdateProfileRequestDTO request);
+        Task<bool> ForgotPasswordAsync(ForgotPasswordRequest request);
+        Task<bool> ResetPasswordAsync(ResetPasswordRequest request);
     }
 }

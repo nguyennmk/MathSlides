@@ -136,5 +136,43 @@ namespace MathSlides.Present.Controllers
                 return StatusCode(500, new { message = "Lỗi máy chủ nội bộ." });
             }
         }
+        // POST: api/auth/forgot-password
+        [HttpPost("forgot-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            try
+            {
+                await _authService.ForgotPasswordAsync(request);
+                return Ok(new { message = "Nếu email của bạn tồn tại trong hệ thống, chúng tôi đã gửi một mã khôi phục." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi nghiêm trọng ở API ForgotPassword");
+                return Ok(new { message = "Nếu email của bạn tồn tại trong hệ thống, chúng tôi đã gửi một mã khôi phục." });
+            }
+        }
+
+        // POST: api/auth/reset-password
+        [HttpPost("reset-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            try
+            {
+                var success = await _authService.ResetPasswordAsync(request);
+                if (!success)
+                {
+                    return BadRequest(new { message = "Mã khôi phục không hợp lệ hoặc đã hết hạn." });
+                }
+
+                return Ok(new { message = "Mật khẩu của bạn đã được thay đổi thành công." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi nghiêm trọng ở API ResetPassword");
+                return StatusCode(500, new { message = "Lỗi máy chủ nội bộ." });
+            }
+        }
     }
 }
