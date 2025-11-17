@@ -65,23 +65,32 @@ namespace MathSlides.Present.Controllers
             }
         }
 
-        // POST: api/templates
         [HttpPost]
-        [Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
-        public async Task<IActionResult> CreateTemplate([FromForm] CreateTemplateRequestDTO request)
+        [Authorize(Roles = "Admin")]
+        [RequestSizeLimit(50 * 1024 * 1024)]
+        public async Task<IActionResult> ImportPptxTemplate([FromForm] PowerpointImportRequest request)
         {
-            // Model binding sẽ tự động validate [Required]
-
             try
             {
-                var newTemplate = await _templateService.CreateTemplateAsync(request);
+                if (request.File == null || request.File.Length == 0)
+                    return BadRequest(new { message = "File không được để trống" });
+
+                // Gọi dịch vụ TEMPLATE (không phải Powerpoint)
+                var newTemplate = await _templateService.ImportPptxAsync(request);
+
+                // Trả về template đã được tạo
                 return CreatedAtAction(nameof(GetTemplateById), new { id = newTemplate.TemplateID }, newTemplate);
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning(ex, "Lỗi validation khi import PPTX.");
+                return BadRequest(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi tạo template");
-                return StatusCode(500, new { message = "Lỗi khi tạo template", error = ex.Message });
+                _logger.LogError(ex, "Lỗi khi import file PowerPoint: {FileName}", request.File?.FileName);
+                return StatusCode(500, new { message = "Lỗi khi xử lý file PowerPoint", error = ex.Message });
             }
         }
 
@@ -139,32 +148,29 @@ namespace MathSlides.Present.Controllers
             }
         }
 
-        [HttpPost("import")]
-        [Consumes("multipart/form-data")]
-        [AllowAnonymous] // Hoặc [Authorize(Roles = "Admin")] tùy bạn
-        [RequestSizeLimit(50 * 1024 * 1024)] // 50MB
-        public async Task<IActionResult> ImportPptxTemplate([FromForm] PowerpointImportRequest request)
+
+        [HttpGet("download/{id}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> DownloadTemplate(int id)
         {
             try
             {
-                if (request.File == null || request.File.Length == 0)
-                    return BadRequest(new { message = "File không được để trống" });
+                var (filePath, contentType, fileName) = await _templateService.GetTemplateFileForDownloadAsync(id);
 
-                // Gọi dịch vụ TEMPLATE (không phải Powerpoint)
-                var newTemplate = await _templateService.ImportPptxAsync(request);
-
-                // Trả về template đã được tạo
-                return CreatedAtAction(nameof(GetTemplateById), new { id = newTemplate.TemplateID }, newTemplate);
+                return PhysicalFile(filePath, contentType, fileName);
             }
-            catch (ArgumentException ex)
+            catch (KeyNotFoundException ex)
             {
-                _logger.LogWarning(ex, "Lỗi validation khi import PPTX.");
-                return BadRequest(new { message = ex.Message });
+                return NotFound(new { message = ex.Message });
+            }
+            catch (FileNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi import file PowerPoint: {FileName}", request.File?.FileName);
-                return StatusCode(500, new { message = "Lỗi khi xử lý file PowerPoint", error = ex.Message });
+                _logger.LogError(ex, "Lỗi khi tải file template ID: {Id}", id);
+                return StatusCode(500, new { message = "Lỗi hệ thống khi tải file.", error = ex.Message });
             }
         }
     }

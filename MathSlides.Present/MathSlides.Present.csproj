@@ -17,4 +17,8 @@
     <ProjectReference Include="..\MathSlides.Service\MathSlides.Service.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\Thumbnails\" />
+  </ItemGroup>
+
 </Project>
