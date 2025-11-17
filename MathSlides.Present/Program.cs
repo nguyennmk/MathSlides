@@ -38,6 +38,7 @@ builder.Services.AddScoped<IGDPTService, GDPTService>();
 builder.Services.AddScoped<IPowerpointService, PowerpointService>();
 builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IEmailService, MailKitEmailService>();
 
 builder.Services.AddHttpClient<IGeminiService, GeminiService>(client =>
 {

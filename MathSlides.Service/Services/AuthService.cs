@@ -22,12 +22,14 @@ namespace MathSlides.Service.Services
         private readonly IAuthRepository _authRepository;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
+        private readonly IEmailService _emailService;
 
-        public AuthService(IAuthRepository authRepository, IConfiguration configuration, ILogger<AuthService> logger)
+        public AuthService(IAuthRepository authRepository, IConfiguration configuration, ILogger<AuthService> logger, IEmailService emailService)
         {
             _authRepository = authRepository;
             _configuration = configuration;
             _logger = logger;
+            _emailService = emailService;
         }
 
         public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
