@@ -15,6 +15,8 @@ namespace MathSlides.Service.Interfaces
         Task<bool> DeleteTemplateAsync(int templateId);
 
         Task<TemplateDTO> ImportPptxAsync(PowerpointImportRequest request);
+
+        Task<(string FilePath, string ContentType, string FileName)> GetTemplateFileForDownloadAsync(int templateId);
     }
 }
 
