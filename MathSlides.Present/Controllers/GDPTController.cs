@@ -125,28 +125,21 @@ namespace MathSlides.Present.Controllers
         /// <summary>
         /// Lấy nội dung giáo trình theo Grade và Class
         /// </summary>
-        [HttpGet("curriculum")]
+        [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetCurriculum(
-            [FromQuery] string gradeName,
-            [FromQuery] string className, 
-            [FromQuery(Name = "is-active")] bool? isActive)
+                    [FromQuery(Name = "grade-name")] string gradeName,
+                    [FromQuery(Name = "class-name")] string className,
+                    [FromQuery(Name = "is-active")] bool? isActive)
         {
             try
             {
-                // Validate required parameters
-                if (string.IsNullOrWhiteSpace(gradeName))
+                if (string.IsNullOrWhiteSpace(gradeName) || string.IsNullOrWhiteSpace(className))
                 {
-                    return BadRequest(new { message = "gradeName là bắt buộc" });
+                    return BadRequest(new { message = "grade-name và class-name là bắt buộc" });
                 }
 
-                if (string.IsNullOrWhiteSpace(className))
-                {
-                    return BadRequest(new { message = "className là bắt buộc" });
-                }
-
-                _logger.LogInformation($"Lấy giáo trình cho Grade: {gradeName}, Class: {className}");
-
+                // Truyền tham số mới vào service
                 var curriculum = await _gdptService.GetCurriculumByGradeAndClassAsync(gradeName, className, isActive);
 
                 if (curriculum == null || !curriculum.Any())
@@ -158,7 +151,7 @@ namespace MathSlides.Present.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi lấy giáo trình cho Grade: {GradeName}, Class: {ClassName}", gradeName, className);
+                _logger.LogError(ex, "Lỗi khi lấy giáo trình");
                 return StatusCode(500, new { message = "Lỗi khi lấy giáo trình", error = ex.Message });
             }
         }
