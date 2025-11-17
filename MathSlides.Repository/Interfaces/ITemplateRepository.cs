@@ -4,7 +4,7 @@ namespace MathSlides.Repository.Interfaces
 {
     public interface ITemplateRepository
     {
-        Task<List<Template>> GetAllTemplatesAsync(bool onlyActive = true);
+        Task<List<Template>> GetAllTemplatesAsync(bool? onlyActive);
         Task<Template?> GetTemplateByIdAsync(int templateId);
         Task<string> GetTemplateContentAsync(int templateId);
         Task<Template> CreateTemplateAsync(Template template);

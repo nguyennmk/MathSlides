@@ -27,7 +27,7 @@
                 _logger = logger;
             }
 
-            public async Task<List<TemplateDTO>> GetAllTemplatesAsync(bool onlyActive = true)
+            public async Task<List<TemplateDTO>> GetAllTemplatesAsync(bool? onlyActive)
             {
                 var templates = await _templateRepository.GetAllTemplatesAsync(onlyActive);
 

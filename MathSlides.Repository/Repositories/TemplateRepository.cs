@@ -14,13 +14,13 @@ namespace MathSlides.Repository.Repositories
             _context = context;
         }
 
-        public async Task<List<Template>> GetAllTemplatesAsync(bool onlyActive = true)
+        public async Task<List<Template>> GetAllTemplatesAsync(bool? isActiveStatus)
         {
             var query = _context.Templates.AsQueryable();
-            
-            if (onlyActive)
+
+            if (isActiveStatus.HasValue)
             {
-                query = query.Where(t => t.IsActive);
+                query = query.Where(t => t.IsActive == isActiveStatus.Value);
             }
 
             return await query.OrderBy(t => t.Name).ToListAsync();
@@ -39,14 +39,11 @@ namespace MathSlides.Repository.Repositories
                 throw new KeyNotFoundException($"Template with ID {templateId} not found");
             }
 
-            // Nếu TemplatePath là đường dẫn file, đọc từ file
             if (!string.IsNullOrEmpty(template.TemplatePath) && File.Exists(template.TemplatePath))
             {
                 return await File.ReadAllTextAsync(template.TemplatePath);
             }
 
-            // Nếu không có file, trả về empty hoặc default template
-            // Có thể mở rộng để lưu trực tiếp JSON trong database nếu cần
             return "{}";
         }
 

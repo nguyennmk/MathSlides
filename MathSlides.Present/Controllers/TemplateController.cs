@@ -20,16 +20,13 @@ namespace MathSlides.Present.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Lấy tất cả templates (không filter)
-        /// </summary>
+
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> GetAllTemplates([FromQuery] bool onlyActive = false)
+        public async Task<IActionResult> GetAllTemplates([FromQuery] bool? onlyActive)
         {
             try
             {
-                // Lấy tất cả templates không filter
                 var templates = await _templateService.GetAllTemplatesAsync(onlyActive);
                 
                 return Ok(templates);
@@ -41,9 +38,6 @@ namespace MathSlides.Present.Controllers
             }
         }
 
-        /// <summary>
-        /// Lấy template chi tiết theo ID (bao gồm nội dung JSON)
-        /// </summary>
         [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetTemplateById(int id)
@@ -76,10 +70,8 @@ namespace MathSlides.Present.Controllers
                 if (request.File == null || request.File.Length == 0)
                     return BadRequest(new { message = "File không được để trống" });
 
-                // Gọi dịch vụ TEMPLATE (không phải Powerpoint)
                 var newTemplate = await _templateService.ImportPptxAsync(request);
 
-                // Trả về template đã được tạo
                 return CreatedAtAction(nameof(GetTemplateById), new { id = newTemplate.TemplateID }, newTemplate);
             }
             catch (ArgumentException ex)
@@ -94,7 +86,6 @@ namespace MathSlides.Present.Controllers
             }
         }
 
-        // PUT: api/templates/{id}
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
         [Consumes("multipart/form-data")]
@@ -122,7 +113,6 @@ namespace MathSlides.Present.Controllers
             }
         }
 
-        // DELETE: api/templates/{id}
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteTemplate(int id)
