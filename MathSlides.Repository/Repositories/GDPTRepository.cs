@@ -14,7 +14,6 @@ namespace MathSlides.Repository.Repositories
             _context = context;
         }
 
-        // Strand operations
         public async Task<Strand?> GetStrandByNameAsync(string name)
         {
             return await _context.Strands
@@ -39,7 +38,6 @@ namespace MathSlides.Repository.Repositories
             return strand;
         }
 
-        // Grade operations
         public async Task<Grade?> GetGradeByNameAsync(string name)
         {
             return await _context.Grades
@@ -64,7 +62,6 @@ namespace MathSlides.Repository.Repositories
             return grade;
         }
 
-        // Class operations
         public async Task<Class?> GetClassByNameAndGradeAsync(string className, int gradeID)
         {
             return await _context.Classes
@@ -89,7 +86,6 @@ namespace MathSlides.Repository.Repositories
             return classEntity;
         }
 
-        // Topic operations
         public async Task<Topic?> GetTopicByNameAsync(string name, int classID)
         {
             return await _context.Topics
@@ -110,7 +106,6 @@ namespace MathSlides.Repository.Repositories
             return version;
         }
 
-        // Content operations
         public async Task<Content> CreateContentAsync(Content content)
         {
             _context.Contents.Add(content);
@@ -118,7 +113,6 @@ namespace MathSlides.Repository.Repositories
             return content;
         }
 
-        // Formula operations
         public async Task<Formula> CreateFormulaAsync(Formula formula)
         {
             _context.Formulas.Add(formula);
@@ -126,7 +120,6 @@ namespace MathSlides.Repository.Repositories
             return formula;
         }
 
-        // Example operations
         public async Task<Example> CreateExampleAsync(Example example)
         {
             _context.Examples.Add(example);
@@ -134,7 +127,6 @@ namespace MathSlides.Repository.Repositories
             return example;
         }
 
-        // Media operations
         public async Task<Media> CreateMediaAsync(Media media)
         {
             _context.Media.Add(media);
@@ -142,7 +134,6 @@ namespace MathSlides.Repository.Repositories
             return media;
         }
 
-        // Curriculum operations
         public async Task<List<Topic>> GetTopicsByGradeAndClassAsync(string gradeName, string className)
         {
             return await _context.Topics
@@ -186,7 +177,6 @@ namespace MathSlides.Repository.Repositories
                 .ToListAsync();
         }
 
-        // Grade and Class operations for selection
         public async Task<List<Grade>> GetAllGradesAsync()
         {
             return await _context.Grades

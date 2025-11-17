@@ -26,7 +26,6 @@ namespace MathSlides.Service.Services
         private readonly IWebHostEnvironment _env;
         private readonly IGDPTService _gdptService;
 
-        // DTO nội bộ để parse JSON từ Gemini
         private class GeminiContentResponse
         {
             [JsonPropertyName("type")] public string Type { get; set; } = string.Empty;
@@ -38,7 +37,6 @@ namespace MathSlides.Service.Services
             [JsonPropertyName("source")] public string Source { get; set; } = string.Empty;
         }
 
-        // CÁC DTO CŨ - KHÔNG CẦN THIẾT NỮA
         private class GeminiFormula { }
         private class GeminiExample { }
 
@@ -61,12 +59,10 @@ namespace MathSlides.Service.Services
         }
         #endregion
 
-        // --- HÀM HELPER: LẤY HOẶC TẠO NỘI DUNG (LOGIC MỚI) ---
         private async Task<List<Content>> GetOrGenerateContentAsync(Topic topic, GenerationRequest request)
         {
             _logger.LogInformation("Dữ liệu được cung cấp trực tiếp trong request. Gọi Gemini để định dạng và tạo thêm nội dung.");
 
-            // 2. Xây dựng prompt mới cho Gemini
             string jsonFormatPrompt = @"Hãy trả về một chuỗi JSON duy nhất (một dòng, không ngắt dòng) là một MẢNG (array) chứa CHÍNH XÁC 2 object.
 Mỗi object đại diện cho một slide và phải có các khóa: ""title"", ""summary"", ""formula"", ""example"", ""explanation"", ""source"".
 - Object 1: Dành cho Slide 2. Hãy điền thông tin từ dữ liệu gốc tôi cung cấp.
@@ -85,14 +81,12 @@ Mỗi object đại diện cho một slide và phải có các khóa: ""title"",
             promptBuilder.AppendLine(jsonFormatPrompt);
             string finalPrompt = promptBuilder.ToString();
 
-            // 5. Gọi Gemini
             var jsonResponse = await _geminiService.GenerateContentAsync(finalPrompt);
             if (string.IsNullOrWhiteSpace(jsonResponse))
             {
                 throw new InvalidOperationException("Gemini không trả về nội dung.");
             }
 
-            // 6. Dọn dẹp JSON
             _logger.LogInformation("--- Raw response from Gemini (before cleaning): {RawResponse}", jsonResponse);
             string cleanedJsonResponse = jsonResponse.Trim().Trim('"');
             if (cleanedJsonResponse.StartsWith("```json", StringComparison.OrdinalIgnoreCase))
@@ -109,7 +103,6 @@ Mỗi object đại diện cho một slide và phải có các khóa: ""title"",
 
             try
             {
-                // 7. Parse JSON trả về
                 var geminiContents = JsonSerializer.Deserialize<List<GeminiContentResponse>>(cleanedJsonResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                 if (geminiContents == null || geminiContents.Count != 2)
@@ -118,7 +111,6 @@ Mỗi object đại diện cho một slide và phải có các khóa: ""title"",
                     throw new InvalidOperationException("Gemini không trả về JSON có 2 mục như yêu cầu.");
                 }
 
-                // 8. Ánh xạ từ DTO (Gemini) sang Entity (Content)
                 var finalContentList = new List<Content>();
                 foreach (var geminiContent in geminiContents)
                 {
@@ -165,8 +157,6 @@ Mỗi object đại diện cho một slide và phải có các khóa: ""title"",
             return Task.FromResult("");
         }
 
-        // --- LUỒNG 1 (JSON TEMPLATE) ---
-        // (Không thay đổi)
         public async Task<(MemoryStream stream, string fileName)> GenerateSlidesFromTopicAsync(int topicId, string templateName)
         {
             var topic = await _topicRepository.GetByIdAsync(topicId);
@@ -197,8 +187,6 @@ Mỗi object đại diện cho một slide và phải có các khóa: ""title"",
             return (pptxStream, $"{safeFileName}.pptx");
         }
 
-
-        // --- LUỒNG 2 (PPTX TEMPLATE) ---
         public async Task<(MemoryStream stream, string fileName)> GenerateSlidesFromPptxTemplateAsync(GenerationRequest request)
         {
             var topic = await _topicRepository.GetByIdAsync(request.TopicId);
@@ -216,14 +204,12 @@ Mỗi object đại diện cho một slide và phải có các khóa: ""title"",
             }
             _logger.LogInformation("Bắt đầu tạo slide cho Topic: {TopicName} (từ template .pptx)", topic.Name);
 
-            // 1. Lấy hoặc tạo nội dung
             var contentList = await GetOrGenerateContentAsync(topic, request);
 
             _logger.LogInformation("--- DEBUG: DỮ LIỆU TỪ GEMINI ---");
             _logger.LogInformation("Content for Slide 2 Title: {Title}", contentList[0]?.Title);
             _logger.LogInformation("Content for Slide 3 Title: {Title}", contentList[1]?.Title);
 
-            // 2. Tải template .PPTX
             var templatePptxPath = Path.Combine(_env.WebRootPath, "templates", request.TemplateName);
             if (!File.Exists(templatePptxPath))
             {
@@ -231,7 +217,6 @@ Mỗi object đại diện cho một slide và phải có các khóa: ""title"",
             }
             _logger.LogInformation("Bắt đầu tạo PPTX từ file template .pptx...");
 
-            // 3. Gọi PowerpointService
             MemoryStream pptxStream = await _powerpointService.GeneratePptxFromPptxTemplateAsync(
                 request,
                 topic,

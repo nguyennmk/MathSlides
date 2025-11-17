@@ -15,6 +15,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using P = DocumentFormat.OpenXml.Presentation;
 using D = DocumentFormat.OpenXml.Drawing;
 
@@ -36,8 +37,6 @@ namespace MathSlides.Service.Services
             _logger = logger;
             _webHostEnvironment = webHostEnvironment;
         }
-
-        // ... (Tất cả các hàm Import, Get, Update, ConvertToJson, Extract... giữ nguyên) ...
 
         public async Task<PowerpointImportResponse> ImportPowerpointAsync(Stream fileStream, string fileName, string? name = null, string? description = null)
         {
@@ -84,8 +83,8 @@ namespace MathSlides.Service.Services
                 using var jsonDoc = JsonDocument.Parse(jsonContent);
                 var root = jsonDoc.RootElement;
                 var slideCount = root.TryGetProperty("SlideCount", out var slideCountProp)
-                    ? slideCountProp.GetInt32()
-                    : 0;
+                  ? slideCountProp.GetInt32()
+                  : 0;
                 var fileName = Path.GetFileName(templatePath);
                 if (string.IsNullOrEmpty(fileName))
                 {
@@ -122,8 +121,8 @@ namespace MathSlides.Service.Services
                     using var jsonDoc = JsonDocument.Parse(jsonContent);
                     var root = jsonDoc.RootElement;
                     var slideCount = root.TryGetProperty("SlideCount", out var slideCountProp)
-                        ? slideCountProp.GetInt32()
-                        : 0;
+                      ? slideCountProp.GetInt32()
+                      : 0;
                     await _powerpointRepository.UpdateFileAsync(templatePath, jsonContent, webRootPath);
                     var fileName = Path.GetFileName(templatePath);
                     if (string.IsNullOrEmpty(fileName))
@@ -156,7 +155,6 @@ namespace MathSlides.Service.Services
                 throw new InvalidOperationException($"Không thể cập nhật file PowerPoint: {ex.Message}", ex);
             }
         }
-
 
         private async Task<(string jsonContent, int slideCount)> ConvertPowerpointToJsonAsync(Stream fileStream)
         {
@@ -295,8 +293,6 @@ namespace MathSlides.Service.Services
 
         #region JSON Template Generation (Không thay đổi)
 
-        // ... (Toàn bộ code của Luồng 1 giữ nguyên) ...
-
         private class PptxTemplate { public long SlideWidthEmu { get; set; } public long SlideHeightEmu { get; set; } public long MarginEmu { get; set; } public Layouts Layouts { get; set; } = new(); }
         private class Layouts { public Layout TitleSlide { get; set; } = new(); public Layout ContentSlide { get; set; } = new(); public SplitLayout SplitSlide { get; set; } = new(); }
         private class Layout { public ShapeProps Title { get; set; } = new(); public ShapeProps Content { get; set; } = new(); public ShapeProps Subtitle { get; set; } = new(); }
@@ -323,19 +319,19 @@ namespace MathSlides.Service.Services
                     SlidePart slidePart1 = CreateSlidePart(presentationPart);
                     ShapeTree shapeTree1 = slidePart1.Slide.CommonSlideData.ShapeTree;
                     shapeTree1.Append(CreateTextShape(
-                        (shapeIdCounter++).ToString(),
-                        topicName,
-                        titleLayout.Title.X, titleLayout.Title.Y, titleLayout.Title.W, titleLayout.Title.H,
-                        titleLayout.Title.FontSize, GetAlignment(titleLayout.Title.Align)
+                      (shapeIdCounter++).ToString(),
+                      topicName,
+                      titleLayout.Title.X, titleLayout.Title.Y, titleLayout.Title.W, titleLayout.Title.H,
+                      titleLayout.Title.FontSize, GetAlignment(titleLayout.Title.Align)
                     ));
                     var firstContent = contentList.FirstOrDefault();
                     if (firstContent != null)
                     {
                         shapeTree1.Append(CreateTextShape(
-                            (shapeIdCounter++).ToString(),
-                            firstContent.Title,
-                            titleLayout.Subtitle.X, titleLayout.Subtitle.Y, titleLayout.Subtitle.W, titleLayout.Subtitle.H,
-                            titleLayout.Subtitle.FontSize, GetAlignment(titleLayout.Subtitle.Align)
+                          (shapeIdCounter++).ToString(),
+                          firstContent.Title,
+                          titleLayout.Subtitle.X, titleLayout.Subtitle.Y, titleLayout.Subtitle.W, titleLayout.Subtitle.H,
+                          titleLayout.Subtitle.FontSize, GetAlignment(titleLayout.Subtitle.Align)
                         ));
                     }
                     foreach (var content in contentList)
@@ -346,14 +342,14 @@ namespace MathSlides.Service.Services
                             SlidePart slidePartN = CreateSlidePart(presentationPart);
                             ShapeTree shapeTreeN = slidePartN.Slide.CommonSlideData.ShapeTree;
                             shapeTreeN.Append(CreateTextShape(
-                                (shapeIdCounter++).ToString(), content.Title,
-                                contentLayout.Title.X, contentLayout.Title.Y, contentLayout.Title.W, contentLayout.Title.H,
-                                contentLayout.Title.FontSize, GetAlignment(contentLayout.Title.Align)
+                              (shapeIdCounter++).ToString(), content.Title,
+                              contentLayout.Title.X, contentLayout.Title.Y, contentLayout.Title.W, contentLayout.Title.H,
+                              contentLayout.Title.FontSize, GetAlignment(contentLayout.Title.Align)
                             ));
                             shapeTreeN.Append(CreateTextShape(
-                                (shapeIdCounter++).ToString(), content.Summary,
-                                contentLayout.Content.X, contentLayout.Content.Y, contentLayout.Content.W, contentLayout.Content.H,
-                                contentLayout.Content.FontSize, GetAlignment(contentLayout.Content.Align)
+                              (shapeIdCounter++).ToString(), content.Summary,
+                              contentLayout.Content.X, contentLayout.Content.Y, contentLayout.Content.W, contentLayout.Content.H,
+                              contentLayout.Content.FontSize, GetAlignment(contentLayout.Content.Align)
                             ));
                         }
                         if (content.Formulas.Any() || content.Examples.Any())
@@ -362,21 +358,22 @@ namespace MathSlides.Service.Services
                             SlidePart slidePartSplit = CreateSlidePart(presentationPart);
                             ShapeTree shapeTreeSplit = slidePartSplit.Slide.CommonSlideData.ShapeTree;
                             shapeTreeSplit.Append(CreateTextShape(
-                                (shapeIdCounter++).ToString(), content.Title,
-                                splitLayout.Title.X, splitLayout.Title.Y, splitLayout.Title.W, splitLayout.Title.H,
-                                splitLayout.Title.FontSize, GetAlignment(splitLayout.Title.Align)
+                              (shapeIdCounter++).ToString(), content.Title,
+                              splitLayout.Title.X, splitLayout.Title.Y, splitLayout.Title.W, splitLayout.Title.H,
+                              splitLayout.Title.FontSize, GetAlignment(splitLayout.Title.Align)
                             ));
                             string formulaText = string.Join("\n\n", content.Formulas.Select(f => f.FormulaText + (f.Explanation != null ? $"\n({f.Explanation})" : "")));
                             shapeTreeSplit.Append(CreateTextShape(
-                                (shapeIdCounter++).ToString(), formulaText,
-                                splitLayout.LeftContent.X, splitLayout.LeftContent.Y, splitLayout.LeftContent.W, splitLayout.LeftContent.H,
-                                splitLayout.LeftContent.FontSize, GetAlignment(splitLayout.LeftContent.Align)
-                            ));
+                              (shapeIdCounter++).ToString(), formulaText,
+                              splitLayout.LeftContent.X, splitLayout.LeftContent.Y, splitLayout.LeftContent.W, splitLayout.LeftContent.H,
+                              splitLayout.LeftContent.FontSize, GetAlignment(splitLayout.LeftContent.Align)
+
+                     ));
                             string exampleText = string.Join("\n\n", content.Examples.Select(e => e.ExampleText));
                             shapeTreeSplit.Append(CreateTextShape(
-                                (shapeIdCounter++).ToString(), exampleText,
-                                splitLayout.RightContent.X, splitLayout.RightContent.Y, splitLayout.RightContent.W, splitLayout.RightContent.H,
-                                splitLayout.RightContent.FontSize, GetAlignment(splitLayout.RightContent.Align)
+                              (shapeIdCounter++).ToString(), exampleText,
+                              splitLayout.RightContent.X, splitLayout.RightContent.Y, splitLayout.RightContent.W, splitLayout.RightContent.H,
+                              splitLayout.RightContent.FontSize, GetAlignment(splitLayout.RightContent.Align)
                             ));
                         }
                     }
@@ -400,26 +397,26 @@ namespace MathSlides.Service.Services
         private P.Shape CreateTextShape(string id, string text, long x, long y, long w, long h, int fontSize, D.TextAlignmentTypeValues alignment)
         {
             P.Shape shape = new P.Shape(
-                new P.NonVisualShapeProperties(
-                    new P.NonVisualDrawingProperties() { Id = (UInt32Value)uint.Parse(id), Name = $"TextBox {id}" },
-                    new P.NonVisualShapeDrawingProperties(new D.ShapeLocks() { NoGrouping = true }),
-                    new P.ApplicationNonVisualDrawingProperties(new P.PlaceholderShape())),
-                new P.ShapeProperties(
-                    new D.Transform2D(
-                        new D.Offset() { X = x, Y = y },
-                        new D.Extents() { Cx = w, Cy = h }),
-                    new D.PresetGeometry(new D.AdjustValueList()) { Preset = D.ShapeTypeValues.Rectangle }),
-                new P.TextBody(
-                    new D.BodyProperties(),
-                    new D.ListStyle(),
-                    new D.Paragraph(
-                        new D.ParagraphProperties(new D.DefaultRunProperties()) { Alignment = alignment },
-                        new D.Run(
-                            new D.RunProperties() { Language = "vi-VN", FontSize = fontSize * 100, Dirty = false },
-                            new D.Text(text ?? "")
-                        )
-                    )
+              new P.NonVisualShapeProperties(
+                new P.NonVisualDrawingProperties() { Id = (UInt32Value)uint.Parse(id), Name = $"TextBox {id}" },
+                new P.NonVisualShapeDrawingProperties(new D.ShapeLocks() { NoGrouping = true }),
+                new P.ApplicationNonVisualDrawingProperties(new P.PlaceholderShape())),
+              new P.ShapeProperties(
+                new D.Transform2D(
+                  new D.Offset() { X = x, Y = y },
+                  new D.Extents() { Cx = w, Cy = h }),
+                new D.PresetGeometry(new D.AdjustValueList()) { Preset = D.ShapeTypeValues.Rectangle }),
+              new P.TextBody(
+                new D.BodyProperties(),
+                new D.ListStyle(),
+                new D.Paragraph(
+                  new D.ParagraphProperties(new D.DefaultRunProperties()) { Alignment = alignment },
+                  new D.Run(
+                    new D.RunProperties() { Language = "vi-VN", FontSize = fontSize * 100, Dirty = false },
+                    new D.Text(text ?? "")
+                  )
                 )
+              )
             );
             return shape;
         }
@@ -445,15 +442,15 @@ namespace MathSlides.Service.Services
         {
             SlideMasterPart slideMasterPart = presentationPart.AddNewPart<SlideMasterPart>();
             slideMasterPart.SlideMaster = new P.SlideMaster(
-                new P.CommonSlideData(new P.ShapeTree()),
-                new P.ColorMap(new D.MasterColorMapping(), new D.OverrideColorMapping()),
-                new P.SlideLayoutIdList(new P.SlideLayoutId() { Id = 2147483649U, RelationshipId = "rId1" })
+              new P.CommonSlideData(new P.ShapeTree()),
+              new P.ColorMap(new D.MasterColorMapping(), new D.OverrideColorMapping()),
+              new P.SlideLayoutIdList(new P.SlideLayoutId() { Id = 2147483649U, RelationshipId = "rId1" })
             );
 
             SlideLayoutPart slideLayoutPart = slideMasterPart.AddNewPart<SlideLayoutPart>();
             slideLayoutPart.SlideLayout = new P.SlideLayout(
-                new P.CommonSlideData(new P.ShapeTree()),
-                new P.ColorMapOverride(new D.MasterColorMapping())
+              new P.CommonSlideData(new P.ShapeTree()),
+              new P.ColorMapOverride(new D.MasterColorMapping())
             );
 
             ThemePart themePart = presentationPart.AddNewPart<ThemePart>();
@@ -463,15 +460,12 @@ namespace MathSlides.Service.Services
         }
         #endregion
 
-
-        // --- LUỒNG 2: TẠO TỪ TEMPLATE PPTX (PHƯƠNG PHÁP TAGGING) ---
-        // *** ĐÃ VIẾT LẠI HOÀN TOÀN ***
         #region PPTX Template Generation (Tagging Method)
 
         public async Task<MemoryStream> GeneratePptxFromPptxTemplateAsync(
             GenerationRequest request,
             Topic topic,
-            List<Content> contentList, // Sẽ chứa 2 mục từ Gemini
+            List<Content> contentList,
             string templatePptxPath)
         {
             if (topic == null)
@@ -479,14 +473,15 @@ namespace MathSlides.Service.Services
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
             if (contentList == null || contentList.Count < 2)
-                throw new ArgumentException("ContentList phải chứa 2 mục (cho Slide 2 và 3)", nameof(contentList));
+                throw new ArgumentException("ContentList phải chứa ít nhất 2 mục (cho Slide 2 và 3)", nameof(contentList));
 
             if (!File.Exists(templatePptxPath))
             {
+                _logger.LogError("Không tìm thấy file template .pptx tại đường dẫn: {Path}", templatePptxPath);
                 throw new FileNotFoundException("Không tìm thấy file template .pptx", templatePptxPath);
             }
 
-            // 1. Sao chép template vào MemoryStream
+            _logger.LogInformation("Đang sao chép file template vào MemoryStream...");
             var ms = new MemoryStream();
             using (var fs = new FileStream(templatePptxPath, FileMode.Open, FileAccess.Read))
             {
@@ -494,7 +489,6 @@ namespace MathSlides.Service.Services
             }
             ms.Position = 0;
 
-            // 2. Mở file .pptx từ MemoryStream (true = cho phép ghi)
             using (PresentationDocument pptDoc = PresentationDocument.Open(ms, true))
             {
                 var presentationPart = pptDoc.PresentationPart;
@@ -503,50 +497,42 @@ namespace MathSlides.Service.Services
                     throw new InvalidOperationException("File template .pptx không hợp lệ.");
                 }
 
-                var slideParts = presentationPart.SlideParts.ToList();
-                if (slideParts.Count < 3)
+                _logger.LogInformation("--- Bắt đầu tạo Dictionary tổng hợp cho TẤT CẢ các tag ---");
+
+                var content1 = contentList[0];
+                var content2 = contentList[1];
+                var allReplacements = new Dictionary<string, string>
                 {
-                    throw new InvalidOperationException($"Template '{request.TemplateName}' phải có ít nhất 3 slide. Chỉ tìm thấy {slideParts.Count}.");
+                    { "a1", request.Name ?? topic.Name ?? "" },
+                    { "a2", request.Title ?? "" },
+                    { "a3", topic.Class?.Name ?? "" },
+                    { "a4", request.Objectives ?? topic.Objectives ?? "" },
+                    { "b1", content1.Title ?? "" },
+                    { "b2", content1.Summary ?? "" },
+                    { "b3", FormatMathContent(content1.Formulas.FirstOrDefault()?.FormulaText) },
+                    { "b4", FormatMathContent(content1.Examples.FirstOrDefault()?.ExampleText) },
+                    { "c1", content2.Title ?? "" },
+                    { "c2", content2.Summary ?? "" },
+                    { "c3", FormatMathContent(content2.Formulas.FirstOrDefault()?.FormulaText) }
+                };
+
+                _logger.LogInformation("Đã tạo Dictionary với {Count} tags. Bắt đầu quét slides...", allReplacements.Count);
+
+                var slideParts = presentationPart.SlideParts.ToList();
+                if (slideParts.Count == 0)
+                {
+                    _logger.LogWarning("File template không chứa slide nào.");
+                    throw new InvalidOperationException("File template không có slide.");
                 }
 
-                // 3. Xử lý Slide 1 (Dữ liệu từ Request và Topic)
-                var titleSlidePart = slideParts[0];
-                var titleSlideReplacements = new Dictionary<string, string>
+                int slideIndex = 1;
+                foreach (var slidePart in slideParts)
                 {
-                    { "chu_de_trang_mot", request.Name ?? topic.Name ?? "ddddds" }, // Sửa: request.Name
-                    { "tieu_de_trang_mot", request.Title ?? "ddddsdffg" }, // Sửa: request.Title
-                    { "lop_trang_mot", topic.Class?.Name ?? "gfsdfg" },
-                    { "noi_dung_dau_bai", request.Objectives ?? topic.Objectives ?? "sdgasdfg" } // Sửa: request.Objectives
-                };
-                _logger.LogInformation("--- Đang xử lý Slide 1 (Tiêu đề) ---");
-                ReplacePlaceholdersByTag(titleSlidePart, titleSlideReplacements);
+                    _logger.LogInformation("--- Đang quét Slide {Index}... ---", slideIndex++);
+                    ReplacePlaceholdersByTag(slidePart, allReplacements);
+                }
 
-                // 4. Xử lý Slide 2 (Dữ liệu từ contentList[0] của Gemini)
-                var contentSlidePart = slideParts[1];
-                var content1 = contentList[0];
-                var contentSlideReplacements = new Dictionary<string, string>
-                {
-                    { "tieu_de_trang_hai", content1.Title ?? "sgfdsg" },
-                    { "noi_dung_trang_hai", content1.Summary ?? "sdgsdg" },
-                    { "cong_thuc_trang_hai", content1.Formulas.FirstOrDefault()?.FormulaText ?? "sdgsd" },
-                    { "vi_du_trang_hai", content1.Examples.FirstOrDefault()?.ExampleText ?? "sdgsd" }                   
-                };
-                _logger.LogInformation("--- Đang xử lý Slide 2 (Nội dung) ---");
-                ReplacePlaceholdersByTag(contentSlidePart, contentSlideReplacements);
-
-                // 5. Xử lý Slide 3 (Dữ liệu từ contentList[1] của Gemini)
-                var extraSlidePart = slideParts[2];
-                var content2 = contentList[1];
-                var extraSlideReplacements = new Dictionary<string, string>
-                {
-                    { "tieu_de_trang_ba", content2.Title ?? "sagdsd" },
-                    { "noi_dung_trang_ba", content2.Summary ?? "sdgdsag" },
-                    { "cong_thuc_trang_ba", content2.Formulas.FirstOrDefault()?.FormulaText ?? "sdgsdg" }
-                };
-                _logger.LogInformation("--- Đang xử lý Slide 3 (Mở rộng) ---");
-                ReplacePlaceholdersByTag(extraSlidePart, extraSlideReplacements);
-
-                // 6. KHÔNG nhân bản, KHÔNG xóa slide. Lưu và đóng.
+                _logger.LogInformation("Đã xử lý tất cả các slide. Đang lưu file...");
                 presentationPart.Presentation.Save();
             }
 
@@ -554,44 +540,43 @@ namespace MathSlides.Service.Services
             return ms;
         }
 
-        // --- HÀM HELPER THAY THẾ TAG (Giữ nguyên) ---
         private void ReplacePlaceholdersByTag(SlidePart slidePart, Dictionary<string, string> replacements)
         {
             if (slidePart?.Slide == null) return;
 
-            var textRuns = slidePart.Slide.Descendants<D.Run>();
+            var textRuns = slidePart.Slide.Descendants<D.Run>().ToList();
 
             foreach (var run in textRuns)
             {
-                if (run.Text == null) continue;
+                if (run.Text == null || string.IsNullOrEmpty(run.Text.Text)) continue;
 
                 foreach (var replacement in replacements)
                 {
                     string tag = replacement.Key;
-                    string value = replacement.Value ?? ""; // Đảm bảo không bị null
+                    string value = replacement.Value ?? "";
 
                     if (run.Text.Text.Contains(tag))
                     {
-                        _logger.LogInformation("Tìm thấy tag: {Tag}. Thay thế bằng: {Value}", tag, value.Length > 50 ? value.Substring(0, 50) + "..." : value);
+                        _logger.LogDebug("Tìm thấy tag: {Tag} trong run text: {RunText}", tag, run.Text.Text);
 
-                        // Xử lý xuống dòng (quan trọng)
                         if (value.Contains("\n"))
                         {
                             var lines = value.Split(new[] { '\n' }, StringSplitOptions.None);
-                            run.Text.Text = run.Text.Text.Replace(tag, lines[0]); // Thay thế tag bằng dòng đầu tiên
+                            run.Text.Text = run.Text.Text.Replace(tag, lines[0]);
 
                             var parentParagraph = run.Parent as D.Paragraph;
                             if (parentParagraph != null)
                             {
-                                // Lấy RunProperties của run hiện tại để clone
                                 D.RunProperties currentRunProperties = run.RunProperties?.CloneNode(true) as D.RunProperties;
+
+                                OpenXmlElement lastAddedElement = run;
 
                                 for (int i = 1; i < lines.Length; i++)
                                 {
-                                    // Thêm ngắt dòng (Break)
-                                    parentParagraph.InsertAfter(new D.Break(), run);
+                                    var newBreak = new D.Break();
+                                    parentParagraph.InsertAfter(newBreak, lastAddedElement);
+                                    lastAddedElement = newBreak;
 
-                                    // Tạo một Run mới cho dòng mới
                                     var newRun = new D.Run();
                                     if (currentRunProperties != null)
                                     {
@@ -599,26 +584,161 @@ namespace MathSlides.Service.Services
                                     }
                                     newRun.Append(new D.Text(lines[i]));
 
-                                    // Thêm Run mới vào sau Break
-                                    parentParagraph.InsertAfter(newRun, parentParagraph.LastChild);
+                                    parentParagraph.InsertAfter(newRun, lastAddedElement);
+                                    lastAddedElement = newRun;
                                 }
+                                _logger.LogInformation("Đã thay thế tag {Tag} bằng {LineCount} dòng.", tag, lines.Length);
                             }
                         }
                         else
                         {
-                            // Thay thế đơn giản
                             run.Text.Text = run.Text.Text.Replace(tag, value);
+                            _logger.LogInformation("Đã thay thế tag {Tag} bằng giá trị đơn.", tag);
                         }
                     }
                 }
             }
         }
 
-        // HÀM HELPER CLONE/DELETE (Không cần dùng nữa)
         private SlidePart CloneSlidePart(PresentationPart presentationPart, SlidePart templateSlide, ref uint uniqueSlideId)
         {
             _logger.LogError("CloneSlidePart không nên được gọi trong luồng này.");
             throw new InvalidOperationException("Logic clone slide không còn được sử dụng.");
+        }
+
+        private static readonly Regex FractionRegex = new(@"\\frac\{([^}]+)\}\{([^}]+)\}", RegexOptions.Compiled);
+
+        private string FormatMathContent(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return string.Empty;
+
+            string output = input;
+
+            while (FractionRegex.IsMatch(output))
+            {
+                output = FractionRegex.Replace(output, match =>
+                {
+                    string numerator = match.Groups[1].Value;
+                    string denominator = match.Groups[2].Value;
+                    
+                    numerator = FormatFractionRecursive(numerator);
+                    denominator = FormatFractionRecursive(denominator);
+                    
+                    bool numeratorNeedsParens = numerator.Contains("+") || numerator.Contains("-") || 
+                                               numerator.Contains("×") || numerator.Contains("/") ||
+                                               numerator.Contains(" ");
+                    bool denominatorNeedsParens = denominator.Contains("+") || denominator.Contains("-") ||
+                                                 denominator.Contains("×") || denominator.Contains("/") ||
+                                                 denominator.Contains(" ");
+                    
+                    if (numeratorNeedsParens && denominatorNeedsParens)
+                    {
+                        return $"({numerator})/({denominator})";
+                    }
+                    else if (numeratorNeedsParens)
+                    {
+                        return $"({numerator})/{denominator}";
+                    }
+                    else if (denominatorNeedsParens)
+                    {
+                        return $"{numerator}/({denominator})";
+                    }
+                    else
+                    {
+                        return $"{numerator}/{denominator}";
+                    }
+                });
+            }
+
+            output = output.Replace("\\times", "×");
+            output = output.Replace("\\cdot", "·");
+            output = output.Replace("\\le", "≤");
+            output = output.Replace("\\ge", "≥");
+            output = output.Replace("\\neq", "≠");
+            output = output.Replace("\\pm", "±");
+            output = output.Replace("\\mp", "∓");
+            output = output.Replace("\\rightarrow", "→");
+            output = output.Replace("\\leftarrow", "←");
+            output = output.Replace("\\Rightarrow", "⇒");
+            output = output.Replace("\\Leftarrow", "⇐");
+            output = output.Replace("\\approx", "≈");
+            output = output.Replace("\\equiv", "≡");
+            output = output.Replace("\\propto", "∝");
+            
+            output = output.Replace("\\sqrt", "√");
+            output = output.Replace("\\sum", "∑");
+            output = output.Replace("\\prod", "∏");
+            output = output.Replace("\\int", "∫");
+            output = output.Replace("\\infty", "∞");
+            output = output.Replace("\\pi", "π");
+            output = output.Replace("\\alpha", "α");
+            output = output.Replace("\\beta", "β");
+            output = output.Replace("\\gamma", "γ");
+            output = output.Replace("\\delta", "δ");
+            output = output.Replace("\\theta", "θ");
+            output = output.Replace("\\lambda", "λ");
+            output = output.Replace("\\mu", "μ");
+            output = output.Replace("\\sigma", "σ");
+            output = output.Replace("\\phi", "φ");
+            output = output.Replace("\\omega", "ω");
+
+            output = output.Replace("\\leq", "≤");
+            output = output.Replace("\\geq", "≥");
+            output = output.Replace("\\sim", "∼");
+            output = output.Replace("\\simeq", "≃");
+            output = output.Replace("\\cong", "≅");
+
+            output = output.Replace("{", "").Replace("}", "");
+
+            return output.Trim();
+        }
+
+        private string FormatFractionRecursive(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return string.Empty;
+
+            string output = input;
+
+            while (FractionRegex.IsMatch(output))
+            {
+                output = FractionRegex.Replace(output, match =>
+                {
+                    string numerator = match.Groups[1].Value;
+                    string denominator = match.Groups[2].Value;
+                    
+                    numerator = FormatFractionRecursive(numerator);
+                    denominator = FormatFractionRecursive(denominator);
+                    
+                    bool numeratorNeedsParens = numerator.Contains("+") || numerator.Contains("-") || 
+                                               numerator.Contains("×") || numerator.Contains("/");
+                    bool denominatorNeedsParens = denominator.Contains("+") || denominator.Contains("-") ||
+                                                 denominator.Contains("×") || denominator.Contains("/");
+                    
+                    if (numeratorNeedsParens && denominatorNeedsParens)
+                    {
+                        return $"({numerator})/({denominator})";
+                    }
+                    else if (numeratorNeedsParens)
+                    {
+                        return $"({numerator})/{denominator}";
+                    }
+                    else if (denominatorNeedsParens)
+                    {
+                        return $"{numerator}/({denominator})";
+                    }
+                    else
+                    {
+                        return $"{numerator}/{denominator}";
+                    }
+                });
+            }
+
+            output = output.Replace("\\times", "×");
+            output = output.Replace("\\cdot", "·");
+            
+            return output;
         }
 
         #endregion

@@ -7,7 +7,6 @@ namespace MathSlides.Business_Object.Models.Entities
         public string FormulaText { get; set; } = string.Empty;
         public string? Explanation { get; set; }
         
-        // Navigation properties
         public Content Content { get; set; } = null!;
         public ICollection<SlideElement> SlideElements { get; set; } = new List<SlideElement>();
     }

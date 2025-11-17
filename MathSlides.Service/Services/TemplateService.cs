@@ -283,7 +283,6 @@
                 var finalFileName = $"{sanitizedBaseName}{fileExtension}";
                 var physicalPath = Path.Combine(folderPath, finalFileName);
 
-                // Nếu file tồn tại -> Báo lỗi (Để người dùng biết mà đổi tên)
                 if (File.Exists(physicalPath))
                 {
                     _logger.LogWarning("File với tên {FileName} đã tồn tại.", finalFileName);

@@ -68,7 +68,6 @@ namespace MathSlides.Service.Services
                 {
                     try
                     {
-                        // 1. Lấy hoặc tạo Strand
                         var strand = await _gdptRepository.GetOrCreateStrandAsync(topicDTO.StrandName);
                         if (strand == null)
                         {
@@ -76,7 +75,6 @@ namespace MathSlides.Service.Services
                             continue;
                         }
 
-                        // 2. Lấy hoặc tạo Grade (giả sử Level = 1, 2, 3 dựa trên tên cấp)
                         int gradeLevel = GetGradeLevel(topicDTO.GradeName);
                         var grade = await _gdptRepository.GetOrCreateGradeAsync(topicDTO.GradeName, gradeLevel);
                         if (grade == null)
@@ -85,7 +83,6 @@ namespace MathSlides.Service.Services
                             continue;
                         }
 
-                        // 3. Lấy hoặc tạo Class
                         var classEntity = await _gdptRepository.GetOrCreateClassAsync(topicDTO.ClassName, grade.GradeID);
                         if (classEntity == null)
                         {
@@ -93,7 +90,6 @@ namespace MathSlides.Service.Services
                             continue;
                         }
 
-                        // 4. Kiểm tra Topic đã tồn tại chưa
                         var existingTopic = await _gdptRepository.GetTopicByNameAsync(topicDTO.TopicName, classEntity.ClassID);
                         if (existingTopic != null)
                         {
@@ -101,7 +97,6 @@ namespace MathSlides.Service.Services
                             continue;
                         }
 
-                        // 5. Tạo Topic
                         var topic = new Topic
                         {
                             Name = topicDTO.TopicName,
@@ -113,7 +108,6 @@ namespace MathSlides.Service.Services
                         topic = await _gdptRepository.CreateTopicAsync(topic);
                         response.TotalTopicsImported++;
 
-                        // 6. Tạo TopicVersion nếu có thông tin
                         if (!string.IsNullOrEmpty(topicDTO.Source))
                         {
                             var version = new TopicVersion
@@ -126,7 +120,6 @@ namespace MathSlides.Service.Services
                             await _gdptRepository.CreateTopicVersionAsync(version);
                         }
 
-                        // 7. Import Contents với các Formulas, Examples, Media
                         foreach (var contentDTO in topicDTO.Contents)
                         {
                             var content = new Content
@@ -138,7 +131,6 @@ namespace MathSlides.Service.Services
                             content = await _gdptRepository.CreateContentAsync(content);
                             response.TotalContentsImported++;
 
-                            // Import Formulas
                             foreach (var formulaDTO in contentDTO.Formulas)
                             {
                                 var formula = new Formula
@@ -150,7 +142,6 @@ namespace MathSlides.Service.Services
                                 await _gdptRepository.CreateFormulaAsync(formula);
                             }
 
-                            // Import Examples
                             foreach (var exampleDTO in contentDTO.Examples)
                             {
                                 var example = new Example
@@ -161,7 +152,6 @@ namespace MathSlides.Service.Services
                                 await _gdptRepository.CreateExampleAsync(example);
                             }
 
-                            // Import Media
                             foreach (var mediaDTO in contentDTO.Media)
                             {
                                 var media = new Media
@@ -181,7 +171,6 @@ namespace MathSlides.Service.Services
                     }
                 }
 
-                // Lưu tất cả các thay đổi còn lại
                 await _gdptRepository.SaveChangesAsync();
 
                 if (response.Errors.Count > 0)
@@ -338,7 +327,6 @@ namespace MathSlides.Service.Services
 
         private int GetGradeLevel(string gradeName)
         {
-            // Hàm helper để xác định Level từ tên cấp học
             if (gradeName.Contains("1") || gradeName.Contains("Tiểu học"))
                 return 1;
             if (gradeName.Contains("2") || gradeName.Contains("THCS"))
@@ -355,7 +343,6 @@ namespace MathSlides.Service.Services
                 throw new KeyNotFoundException($"Không tìm thấy Topic với ID: {topicId}");
             }
 
-            // Cập nhật các trường
             topic.Name = request.Name;
             topic.Objectives = request.Objectives;
             topic.Source = request.Source;

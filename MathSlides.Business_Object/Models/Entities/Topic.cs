@@ -9,7 +9,6 @@ namespace MathSlides.Business_Object.Models.Entities
         public string? Objectives { get; set; }
         public string? Source { get; set; }
         
-        // Navigation properties
         public Class Class { get; set; } = null!;
         public Strand Strand { get; set; } = null!;
         public bool IsActive { get; set; } = true;

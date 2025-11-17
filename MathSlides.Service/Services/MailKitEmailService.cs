@@ -18,7 +18,6 @@ namespace MathSlides.Service.Services
         {
             _config = config;
             _logger = logger;
-            // Đọc SmtpSettings từ appsettings.json
             _smtpSettings = _config.GetSection("SmtpSettings").Get<SmtpSettings>()
                 ?? throw new InvalidOperationException("SmtpSettings không được cấu hình.");
         }
@@ -43,18 +42,15 @@ namespace MathSlides.Service.Services
         {
             try
             {
-                // Các class này giờ sẽ được tìm thấy
                 var email = new MimeMessage();
                 email.From.Add(new MailboxAddress(_smtpSettings.SenderName, _smtpSettings.SenderEmail));
                 email.To.Add(MailboxAddress.Parse(to));
                 email.Subject = subject;
                 email.Body = new TextPart(TextFormat.Html) { Text = htmlBody };
 
-                // SmtpClient này là của MailKit.Net.Smtp
                 using var smtp = new SmtpClient();
                 _logger.LogInformation($"Connecting to SMTP server: {_smtpSettings.SmtpServer} on port {_smtpSettings.Port}");
 
-                // Các phương thức .Async giờ sẽ được tìm thấy
                 await smtp.ConnectAsync(_smtpSettings.SmtpServer, _smtpSettings.Port, SecureSocketOptions.StartTls);
                 await smtp.AuthenticateAsync(_smtpSettings.Username, _smtpSettings.Password);
                 var result = await smtp.SendAsync(email);
@@ -69,7 +65,6 @@ namespace MathSlides.Service.Services
         }
     }
 
-    // Class helper để bind SmtpSettings
     internal class SmtpSettings
     {
         public string SmtpServer { get; set; } = string.Empty;
