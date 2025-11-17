@@ -5,6 +5,7 @@ using MathSlides.Business_Object.Models.DTOs.Powerpoint;
 using MathSlides.Business_Object.Models.Entities;
 using MathSlides.Repository.Interfaces;
 using MathSlides.Service.Interfaces;
+using MathSlides.Service.DTOs.Generation;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
@@ -21,6 +22,7 @@ namespace MathSlides.Service.Services
 {
     public class PowerpointService : IPowerpointService
     {
+        #region Original Import/Management Functions (Không thay đổi)
         private readonly IPowerpointRepository _powerpointRepository;
         private readonly ILogger<PowerpointService> _logger;
         private readonly IWebHostEnvironment _webHostEnvironment;
@@ -35,8 +37,7 @@ namespace MathSlides.Service.Services
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // --- CÁC HÀM GỐC CỦA BẠN (IMPORT, GET INFO, ETC.) ---
-        #region Original Import/Management Functions
+        // ... (Tất cả các hàm Import, Get, Update, ConvertToJson, Extract... giữ nguyên) ...
 
         public async Task<PowerpointImportResponse> ImportPowerpointAsync(Stream fileStream, string fileName, string? name = null, string? description = null)
         {
@@ -45,16 +46,13 @@ namespace MathSlides.Service.Services
                 using var memoryStream = new MemoryStream();
                 await fileStream.CopyToAsync(memoryStream);
                 memoryStream.Position = 0;
-
                 var (jsonContent, slideCount) = await ConvertPowerpointToJsonAsync(memoryStream);
-
                 var uniqueFileName = $"{Path.GetFileNameWithoutExtension(fileName)}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(fileName)}";
                 var jsonFileName = Path.ChangeExtension(uniqueFileName, ".json");
                 var jsonBytes = Encoding.UTF8.GetBytes(jsonContent);
                 var webRootPath = _webHostEnvironment.WebRootPath;
                 var physicalPath = await _powerpointRepository.SaveFileAsync(jsonBytes, jsonFileName, webRootPath, "Templates");
                 var relativePath = $"/Templates/{jsonFileName}";
-
                 return new PowerpointImportResponse
                 {
                     TemplatePath = relativePath,
@@ -83,20 +81,16 @@ namespace MathSlides.Service.Services
             {
                 var webRootPath = _webHostEnvironment.WebRootPath;
                 var jsonContent = await _powerpointRepository.ReadFileAsync(templatePath, webRootPath);
-
                 using var jsonDoc = JsonDocument.Parse(jsonContent);
                 var root = jsonDoc.RootElement;
-
                 var slideCount = root.TryGetProperty("SlideCount", out var slideCountProp)
                     ? slideCountProp.GetInt32()
                     : 0;
-
                 var fileName = Path.GetFileName(templatePath);
                 if (string.IsNullOrEmpty(fileName))
                 {
                     fileName = Path.GetFileName(templatePath.TrimStart('/'));
                 }
-
                 return new PowerpointImportResponse
                 {
                     TemplatePath = templatePath,
@@ -127,19 +121,15 @@ namespace MathSlides.Service.Services
                 {
                     using var jsonDoc = JsonDocument.Parse(jsonContent);
                     var root = jsonDoc.RootElement;
-
                     var slideCount = root.TryGetProperty("SlideCount", out var slideCountProp)
                         ? slideCountProp.GetInt32()
                         : 0;
-
                     await _powerpointRepository.UpdateFileAsync(templatePath, jsonContent, webRootPath);
-
                     var fileName = Path.GetFileName(templatePath);
                     if (string.IsNullOrEmpty(fileName))
                     {
                         fileName = Path.GetFileName(templatePath.TrimStart('/'));
                     }
-
                     return new PowerpointImportResponse
                     {
                         TemplatePath = templatePath,
@@ -178,16 +168,13 @@ namespace MathSlides.Service.Services
                 {
                     throw new InvalidOperationException("File PowerPoint không hợp lệ: không tìm thấy presentation part");
                 }
-
                 var presentation = presentationPart.Presentation;
                 if (presentation?.SlideIdList == null)
                 {
                     throw new InvalidOperationException("File PowerPoint không hợp lệ: không tìm thấy slides");
                 }
-
                 var slides = new List<SlideData>();
                 var slideCount = 0;
-
                 foreach (SlideId slideId in presentation.SlideIdList.Elements<SlideId>())
                 {
                     slideCount++;
@@ -197,20 +184,17 @@ namespace MathSlides.Service.Services
                         slides.Add(slideData);
                     }
                 }
-
                 var result = new
                 {
                     SlideCount = slideCount,
                     Slides = slides,
                     CreatedAt = DateTime.UtcNow
                 };
-
                 var options = new JsonSerializerOptions
                 {
                     WriteIndented = true,
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
                 };
-
                 var jsonContent = JsonSerializer.Serialize(result, options);
                 return (jsonContent, slideCount);
             });
@@ -225,21 +209,18 @@ namespace MathSlides.Service.Services
                 {
                     return null;
                 }
-
                 var slidePart = (SlidePart?)presentationPart.GetPartById(relationshipId);
                 if (slidePart?.Slide == null)
                 {
                     return null;
                 }
-
                 var slide = slidePart.Slide;
                 var slideData = new SlideData
                 {
                     SlideId = slideId.RelationshipId?.Value ?? "",
                     Shapes = new List<ShapeData>(),
-                    Texts = new List<string>() // Khởi tạo list này
+                    Texts = new List<string>()
                 };
-
                 if (slide.CommonSlideData?.ShapeTree != null)
                 {
                     foreach (var shape in slide.CommonSlideData.ShapeTree.Elements<DocumentFormat.OpenXml.Presentation.Shape>())
@@ -250,7 +231,6 @@ namespace MathSlides.Service.Services
                             slideData.Shapes.Add(shapeData);
                         }
                     }
-
                     foreach (var textBody in slide.CommonSlideData.ShapeTree.Descendants<DocumentFormat.OpenXml.Drawing.TextBody>())
                     {
                         var text = ExtractTextFromTextBody(textBody);
@@ -260,7 +240,6 @@ namespace MathSlides.Service.Services
                         }
                     }
                 }
-
                 return slideData;
             }
             catch (Exception ex)
@@ -279,13 +258,11 @@ namespace MathSlides.Service.Services
                     ShapeId = shape.NonVisualShapeProperties?.NonVisualDrawingProperties?.Id?.Value ?? 0,
                     Name = shape.NonVisualShapeProperties?.NonVisualDrawingProperties?.Name?.Value ?? ""
                 };
-
                 var textBody = shape.GetFirstChild<DocumentFormat.OpenXml.Drawing.TextBody>();
                 if (textBody != null)
                 {
                     shapeData.Text = ExtractTextFromTextBody(textBody);
                 }
-
                 return shapeData;
             }
             catch
@@ -312,25 +289,13 @@ namespace MathSlides.Service.Services
             return textBuilder.ToString().Trim();
         }
 
-
-        private class SlideData
-        {
-            public string SlideId { get; set; } = string.Empty;
-            public List<ShapeData> Shapes { get; set; } = new();
-            public List<string> Texts { get; set; } = new();
-        }
-
-        private class ShapeData
-        {
-            public uint ShapeId { get; set; }
-            public string Name { get; set; } = string.Empty;
-            public string Text { get; set; } = string.Empty;
-        }
-
+        private class SlideData { public string SlideId { get; set; } = string.Empty; public List<ShapeData> Shapes { get; set; } = new(); public List<string> Texts { get; set; } = new(); }
+        private class ShapeData { public uint ShapeId { get; set; } public string Name { get; set; } = string.Empty; public string Text { get; set; } = string.Empty; }
         #endregion
 
-        // --- LUỒNG 1: TẠO TỪ JSON (GIỮ NGUYÊN) ---
-        #region JSON Template Generation
+        #region JSON Template Generation (Không thay đổi)
+
+        // ... (Toàn bộ code của Luồng 1 giữ nguyên) ...
 
         private class PptxTemplate { public long SlideWidthEmu { get; set; } public long SlideHeightEmu { get; set; } public long MarginEmu { get; set; } public Layouts Layouts { get; set; } = new(); }
         private class Layouts { public Layout TitleSlide { get; set; } = new(); public Layout ContentSlide { get; set; } = new(); public SplitLayout SplitSlide { get; set; } = new(); }
@@ -345,7 +310,6 @@ namespace MathSlides.Service.Services
             {
                 throw new InvalidOperationException("Không thể đọc file JSON template.");
             }
-
             MemoryStream ms = new MemoryStream();
             await Task.Run(() =>
             {
@@ -354,13 +318,10 @@ namespace MathSlides.Service.Services
                     PresentationPart presentationPart = pptDoc.AddPresentationPart();
                     presentationPart.Presentation = new P.Presentation();
                     CreatePresentationParts(presentationPart);
-
                     uint shapeIdCounter = 1;
-
                     var titleLayout = template.Layouts.TitleSlide;
                     SlidePart slidePart1 = CreateSlidePart(presentationPart);
                     ShapeTree shapeTree1 = slidePart1.Slide.CommonSlideData.ShapeTree;
-
                     shapeTree1.Append(CreateTextShape(
                         (shapeIdCounter++).ToString(),
                         topicName,
@@ -377,7 +338,6 @@ namespace MathSlides.Service.Services
                             titleLayout.Subtitle.FontSize, GetAlignment(titleLayout.Subtitle.Align)
                         ));
                     }
-
                     foreach (var content in contentList)
                     {
                         if (!string.IsNullOrWhiteSpace(content.Summary))
@@ -385,7 +345,6 @@ namespace MathSlides.Service.Services
                             var contentLayout = template.Layouts.ContentSlide;
                             SlidePart slidePartN = CreateSlidePart(presentationPart);
                             ShapeTree shapeTreeN = slidePartN.Slide.CommonSlideData.ShapeTree;
-
                             shapeTreeN.Append(CreateTextShape(
                                 (shapeIdCounter++).ToString(), content.Title,
                                 contentLayout.Title.X, contentLayout.Title.Y, contentLayout.Title.W, contentLayout.Title.H,
@@ -402,20 +361,17 @@ namespace MathSlides.Service.Services
                             var splitLayout = template.Layouts.SplitSlide;
                             SlidePart slidePartSplit = CreateSlidePart(presentationPart);
                             ShapeTree shapeTreeSplit = slidePartSplit.Slide.CommonSlideData.ShapeTree;
-
                             shapeTreeSplit.Append(CreateTextShape(
                                 (shapeIdCounter++).ToString(), content.Title,
                                 splitLayout.Title.X, splitLayout.Title.Y, splitLayout.Title.W, splitLayout.Title.H,
                                 splitLayout.Title.FontSize, GetAlignment(splitLayout.Title.Align)
                             ));
-
                             string formulaText = string.Join("\n\n", content.Formulas.Select(f => f.FormulaText + (f.Explanation != null ? $"\n({f.Explanation})" : "")));
                             shapeTreeSplit.Append(CreateTextShape(
                                 (shapeIdCounter++).ToString(), formulaText,
                                 splitLayout.LeftContent.X, splitLayout.LeftContent.Y, splitLayout.LeftContent.W, splitLayout.LeftContent.H,
                                 splitLayout.LeftContent.FontSize, GetAlignment(splitLayout.LeftContent.Align)
                             ));
-
                             string exampleText = string.Join("\n\n", content.Examples.Select(e => e.ExampleText));
                             shapeTreeSplit.Append(CreateTextShape(
                                 (shapeIdCounter++).ToString(), exampleText,
@@ -427,7 +383,6 @@ namespace MathSlides.Service.Services
                     presentationPart.Presentation.Save();
                 }
             });
-
             ms.Position = 0;
             return ms;
         }
@@ -506,17 +461,25 @@ namespace MathSlides.Service.Services
             slideMasterPart.AddPart(themePart);
             presentationPart.AddPart(slideMasterPart);
         }
-
         #endregion
 
 
         // --- LUỒNG 2: TẠO TỪ TEMPLATE PPTX (PHƯƠNG PHÁP TAGGING) ---
+        // *** ĐÃ VIẾT LẠI HOÀN TOÀN ***
         #region PPTX Template Generation (Tagging Method)
 
-        public async Task<MemoryStream> GeneratePptxFromPptxTemplateAsync(Topic topic, List<Content> contentList, string templatePptxPath)
+        public async Task<MemoryStream> GeneratePptxFromPptxTemplateAsync(
+            GenerationRequest request,
+            Topic topic,
+            List<Content> contentList, // Sẽ chứa 2 mục từ Gemini
+            string templatePptxPath)
         {
             if (topic == null)
                 throw new ArgumentNullException(nameof(topic));
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+            if (contentList == null || contentList.Count < 2)
+                throw new ArgumentException("ContentList phải chứa 2 mục (cho Slide 2 và 3)", nameof(contentList));
 
             if (!File.Exists(templatePptxPath))
             {
@@ -529,6 +492,7 @@ namespace MathSlides.Service.Services
             {
                 await fs.CopyToAsync(ms);
             }
+            ms.Position = 0;
 
             // 2. Mở file .pptx từ MemoryStream (true = cho phép ghi)
             using (PresentationDocument pptDoc = PresentationDocument.Open(ms, true))
@@ -539,147 +503,51 @@ namespace MathSlides.Service.Services
                     throw new InvalidOperationException("File template .pptx không hợp lệ.");
                 }
 
-                // 3. TẠO BẢN ĐỒ THAY THẾ (THEO "TAG" BẠN ĐẶT)
-                var globalReplacements = new Dictionary<string, string>
-                {
-                    { "tpl_GradeName", topic.Class?.Grade?.Name ?? "" },
-                    { "tpl_StrandName", topic.Strand?.Name ?? "" }
-                };
-
-                // 4. Xử lý Slide Tiêu đề (Slide 1)
                 var slideParts = presentationPart.SlideParts.ToList();
-                var titleSlidePart = slideParts.FirstOrDefault();
-                var firstContent = contentList.FirstOrDefault();
-
-                if (titleSlidePart != null)
+                if (slideParts.Count < 3)
                 {
-                    var titleSlideReplacements = new Dictionary<string, string>(globalReplacements)
-                    {
-                        { "tpl_TopicName", topic.Name },
-                        { "tpl_ClassName", topic.Class?.Name ?? "" },
-                        { "tpl_Objectives", topic.Objectives ?? "" },
-                        { "tpl_Source", topic.Source ?? "" },
-                        { "tpl_FirstContentTitle", firstContent?.Title ?? "" }
-                    };
-                    _logger.LogInformation("--- Đang xử lý Slide 1 (Tiêu đề) ---");
-                    ReplacePlaceholdersByTag(titleSlidePart, titleSlideReplacements);
+                    throw new InvalidOperationException($"Template '{request.TemplateName}' phải có ít nhất 3 slide. Chỉ tìm thấy {slideParts.Count}.");
                 }
 
-                // 5. Xác định các Slide Mẫu (Vẫn theo quy ước Slide 2, 3)
-                SlidePart? contentTemplateSlide = slideParts.Count > 1 ? slideParts[1] : null;
-                SlidePart? splitTemplateSlide = slideParts.Count > 2 ? slideParts[2] : null;
-
-                if (contentTemplateSlide == null || splitTemplateSlide == null)
+                // 3. Xử lý Slide 1 (Dữ liệu từ Request và Topic)
+                var titleSlidePart = slideParts[0];
+                var titleSlideReplacements = new Dictionary<string, string>
                 {
-                    _logger.LogWarning("Template .pptx không đủ 3 slide mẫu. Sẽ chỉ điền slide 1.");
-                }
+                    { "chu_de_trang_mot", request.Name ?? topic.Name ?? "ddddds" }, // Sửa: request.Name
+                    { "tieu_de_trang_mot", request.Title ?? "ddddsdffg" }, // Sửa: request.Title
+                    { "lop_trang_mot", topic.Class?.Name ?? "gfsdfg" },
+                    { "noi_dung_dau_bai", request.Objectives ?? topic.Objectives ?? "sdgasdfg" } // Sửa: request.Objectives
+                };
+                _logger.LogInformation("--- Đang xử lý Slide 1 (Tiêu đề) ---");
+                ReplacePlaceholdersByTag(titleSlidePart, titleSlideReplacements);
 
-                var slidesToInsert = new List<SlidePart>();
-                uint uniqueSlideId = (uint)presentationPart.Presentation.SlideIdList.Count() + 256;
-
-                // 6. GIỚI HẠN SLIDE (THEO YÊU CẦU MỚI)
-                int slideCounter = 1; // Bắt đầu từ 1 vì đã có slide tiêu đề
-                const int MAX_SLIDES = 7;
-
-                // Lặp qua danh sách content (Bỏ qua content đầu tiên đã dùng cho slide 1)
-                foreach (var content in contentList.Skip(1))
+                // 4. Xử lý Slide 2 (Dữ liệu từ contentList[0] của Gemini)
+                var contentSlidePart = slideParts[1];
+                var content1 = contentList[0];
+                var contentSlideReplacements = new Dictionary<string, string>
                 {
-                    if (slideCounter >= MAX_SLIDES)
-                    {
-                        _logger.LogInformation("Đã đạt giới hạn 7 slide. Dừng tạo thêm slide.");
-                        break;
-                    }
+                    { "tieu_de_trang_hai", content1.Title ?? "sgfdsg" },
+                    { "noi_dung_trang_hai", content1.Summary ?? "sdgsdg" },
+                    { "cong_thuc_trang_hai", content1.Formulas.FirstOrDefault()?.FormulaText ?? "sdgsd" },
+                    { "vi_du_trang_hai", content1.Examples.FirstOrDefault()?.ExampleText ?? "sdgsd" },
+                    { "nguon_thong_tin_trang_hai", content1.Source ?? request.Source ?? topic.Source ?? "sgdsadg" } // Sửa: request.Source
+                };
+                _logger.LogInformation("--- Đang xử lý Slide 2 (Nội dung) ---");
+                ReplacePlaceholdersByTag(contentSlidePart, contentSlideReplacements);
 
-                    // Tạo slide Tóm tắt (Summary)
-                    if (!string.IsNullOrWhiteSpace(content.Summary) && contentTemplateSlide != null && slideCounter < MAX_SLIDES)
-                    {
-                        var newContentSlide = CloneSlidePart(presentationPart, contentTemplateSlide, ref uniqueSlideId);
-                        var contentReplacements = new Dictionary<string, string>(globalReplacements)
-                        {
-                            { "tpl_ContentTitle", content.Title },
-                            { "tpl_ContentSummary", content.Summary }
-                        };
-                        _logger.LogInformation("--- Đang xử lý Slide {SlideNum} (Content: {Title}) ---", slideCounter + 1, content.Title);
-                        ReplacePlaceholdersByTag(newContentSlide, contentReplacements);
-                        slidesToInsert.Add(newContentSlide);
-                        slideCounter++;
-                    }
-
-                    if (slideCounter >= MAX_SLIDES) break;
-
-                    // Tạo slide Công thức/Ví dụ (Split)
-                    if ((content.Formulas.Any() || content.Examples.Any() || content.Media.Any()) && splitTemplateSlide != null && slideCounter < MAX_SLIDES)
-                    {
-                        var newSplitSlide = CloneSlidePart(presentationPart, splitTemplateSlide, ref uniqueSlideId);
-
-                        string formulaText = string.Join("\n\n", content.Formulas.Select(f => f.FormulaText));
-                        string explanationText = string.Join("\n\n", content.Formulas.Where(f => !string.IsNullOrEmpty(f.Explanation)).Select(f => f.Explanation));
-                        string exampleText = string.Join("\n\n", content.Examples.Select(e => e.ExampleText));
-                        string mediaText = string.Join("\n", content.Media.Select(m => $"{m.Type}: {m.Url}"));
-
-                        var splitReplacements = new Dictionary<string, string>(globalReplacements)
-                        {
-                            { "tpl_ContentTitle", content.Title },
-                            { "tpl_ContentFormulas", string.IsNullOrWhiteSpace(formulaText) ? "Không có công thức." : formulaText },
-                            { "tpl_ContentFormulaExplanations", string.IsNullOrWhiteSpace(explanationText) ? "" : explanationText },
-                            { "tpl_ContentExamples", string.IsNullOrWhiteSpace(exampleText) ? "Không có ví dụ." : exampleText },
-                            { "tpl_ContentMedia", string.IsNullOrWhiteSpace(mediaText) ? "Không có media." : mediaText }
-                        };
-
-                        _logger.LogInformation("--- Đang xử lý Slide {SlideNum} (Split: {Title}) ---", slideCounter + 1, content.Title);
-                        ReplacePlaceholdersByTag(newSplitSlide, splitReplacements);
-                        slidesToInsert.Add(newSplitSlide);
-                        slideCounter++;
-                    }
-                }
-
-                // 7. Thêm các slide đã tạo vào bài thuyết trình
-                var slideIdList = presentationPart.Presentation.SlideIdList;
-                foreach (var slidePart in slidesToInsert)
+                // 5. Xử lý Slide 3 (Dữ liệu từ contentList[1] của Gemini)
+                var extraSlidePart = slideParts[2];
+                var content2 = contentList[1];
+                var extraSlideReplacements = new Dictionary<string, string>
                 {
-                    slideIdList.Append(new P.SlideId()
-                    {
-                        Id = uniqueSlideId++,
-                        RelationshipId = presentationPart.GetIdOfPart(slidePart)
-                    });
-                }
+                    { "tieu_de_trang_ba", content2.Title ?? "sagdsd" },
+                    { "noi_dung_trang_ba", content2.Summary ?? "sdgdsag" },
+                    { "cong_thuc_trang_ba", content2.Formulas.FirstOrDefault()?.FormulaText ?? "sdgsdg" }
+                };
+                _logger.LogInformation("--- Đang xử lý Slide 3 (Mở rộng) ---");
+                ReplacePlaceholdersByTag(extraSlidePart, extraSlideReplacements);
 
-                // 8. Xóa các slide mẫu (Slide 2 và 3), nếu chúng tồn tại
-                if (contentTemplateSlide != null)
-                {
-                    var contentTemplateRelId = presentationPart.GetIdOfPart(contentTemplateSlide);
-                    var slideId = slideIdList.ChildElements.OfType<P.SlideId>().FirstOrDefault(s => s.RelationshipId == contentTemplateRelId);
-                    if (slideId != null) slideIdList.RemoveChild(slideId);
-                    presentationPart.DeletePart(contentTemplateSlide);
-                }
-                if (splitTemplateSlide != null)
-                {
-                    var splitTemplateRelId = presentationPart.GetIdOfPart(splitTemplateSlide);
-                    var slideId = slideIdList.ChildElements.OfType<P.SlideId>().FirstOrDefault(s => s.RelationshipId == splitTemplateRelId);
-                    if (slideId != null) slideIdList.RemoveChild(slideId);
-                    presentationPart.DeletePart(splitTemplateSlide);
-                }
-
-                // 9. Xóa tất cả các slide còn lại (nếu có) VƯỢT QUÁ 7 slide
-                while (slideIdList.Count() > MAX_SLIDES)
-                {
-                    var slideToRemove = slideIdList.ChildElements.OfType<P.SlideId>().LastOrDefault();
-                    if (slideToRemove != null)
-                    {
-                        var partToRemove = presentationPart.GetPartById(slideToRemove.RelationshipId);
-                        slideToRemove.Remove();
-                        if (partToRemove != null)
-                        {
-                            presentationPart.DeletePart(partToRemove);
-                        }
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                // 10. Lưu
+                // 6. KHÔNG nhân bản, KHÔNG xóa slide. Lưu và đóng.
                 presentationPart.Presentation.Save();
             }
 
@@ -687,128 +555,71 @@ namespace MathSlides.Service.Services
             return ms;
         }
 
-        // --- HÀM HELPER NÂNG CẤP (PHƯƠNG PHÁP TAGGING) ---
-        // *** PHIÊN BẢN 5: SỬA LỖI GROUP SHAPE ***
+        // --- HÀM HELPER THAY THẾ TAG (Giữ nguyên) ---
         private void ReplacePlaceholdersByTag(SlidePart slidePart, Dictionary<string, string> replacements)
         {
             if (slidePart?.Slide == null) return;
 
-            _logger.LogInformation("Đang quét các tag: {Tags}", string.Join(", ", replacements.Keys));
+            var textRuns = slidePart.Slide.Descendants<D.Run>();
 
-            // 1. Tìm TẤT CẢ các element có thuộc tính Name (tag)
-            var namedElements = slidePart.Slide.Descendants<P.NonVisualDrawingProperties>()
-                .Where(nvdp => nvdp.Name != null && replacements.ContainsKey(nvdp.Name.Value))
-                .ToList();
-
-            _logger.LogInformation("Tìm thấy {Count} tag khớp.", namedElements.Count);
-
-            foreach (var nvdp in namedElements)
+            foreach (var run in textRuns)
             {
-                string tag = nvdp.Name.Value;
-                string newText = replacements[tag];
+                if (run.Text == null) continue;
 
-                _logger.LogInformation("Đang xử lý tag: '{Tag}'", tag);
-
-                // 2. *** SỬA LỖI GROUP SHAPE ***
-                // Đi ngược (parent) lên để tìm container (P.Shape, P.GraphicFrame)
-                // bất kể nó có bị group hay không
-                OpenXmlCompositeElement container = null;
-                var parent = nvdp.Parent;
-                while (parent != null)
+                foreach (var replacement in replacements)
                 {
-                    // Nếu cha là Shape hoặc GraphicFrame, chúng ta tìm thấy nó!
-                    if (parent is P.Shape || parent is P.GraphicFrame)
+                    string tag = replacement.Key;
+                    string value = replacement.Value ?? ""; // Đảm bảo không bị null
+
+                    if (run.Text.Text.Contains(tag))
                     {
-                        container = parent as OpenXmlCompositeElement;
-                        _logger.LogInformation("Tìm thấy container '{ContainerType}' cho tag '{Tag}'", container.LocalName, tag);
-                        break;
+                        _logger.LogInformation("Tìm thấy tag: {Tag}. Thay thế bằng: {Value}", tag, value.Length > 50 ? value.Substring(0, 50) + "..." : value);
+
+                        // Xử lý xuống dòng (quan trọng)
+                        if (value.Contains("\n"))
+                        {
+                            var lines = value.Split(new[] { '\n' }, StringSplitOptions.None);
+                            run.Text.Text = run.Text.Text.Replace(tag, lines[0]); // Thay thế tag bằng dòng đầu tiên
+
+                            var parentParagraph = run.Parent as D.Paragraph;
+                            if (parentParagraph != null)
+                            {
+                                // Lấy RunProperties của run hiện tại để clone
+                                D.RunProperties currentRunProperties = run.RunProperties?.CloneNode(true) as D.RunProperties;
+
+                                for (int i = 1; i < lines.Length; i++)
+                                {
+                                    // Thêm ngắt dòng (Break)
+                                    parentParagraph.InsertAfter(new D.Break(), run);
+
+                                    // Tạo một Run mới cho dòng mới
+                                    var newRun = new D.Run();
+                                    if (currentRunProperties != null)
+                                    {
+                                        newRun.Append(currentRunProperties.CloneNode(true));
+                                    }
+                                    newRun.Append(new D.Text(lines[i]));
+
+                                    // Thêm Run mới vào sau Break
+                                    parentParagraph.InsertAfter(newRun, parentParagraph.LastChild);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Thay thế đơn giản
+                            run.Text.Text = run.Text.Text.Replace(tag, value);
+                        }
                     }
-                    // Nếu không, đi lên một cấp nữa
-                    parent = parent.Parent;
-                }
-
-                if (container == null)
-                {
-                    _logger.LogWarning($"Tìm thấy tag '{tag}' nhưng không thể tìm thấy container (Shape/GraphicFrame).");
-                    continue;
-                }
-
-                // 3. Tìm TextBody BÊN TRONG container đó
-                // Sửa lỗi: Phải tìm cả P.TextBody (cho Shape) và D.TextBody (cho GraphicFrame)
-                OpenXmlCompositeElement textBody = container.Descendants<P.TextBody>().FirstOrDefault() as OpenXmlCompositeElement
-                                               ?? container.Descendants<D.TextBody>().FirstOrDefault() as OpenXmlCompositeElement;
-
-
-                if (textBody == null)
-                {
-                    _logger.LogWarning($"Tìm thấy container cho tag '{tag}' nhưng không tìm thấy TextBody (P hoặc D) bên trong.");
-                    continue;
-                }
-
-                _logger.LogInformation("Đã tìm thấy TextBody. Bắt đầu ghi đè text for tag '{Tag}'", tag);
-
-                // 4. Lấy định dạng cũ và Ghi đè text
-                var firstPara = textBody.GetFirstChild<D.Paragraph>();
-                var paraProps = (D.ParagraphProperties)firstPara?.ParagraphProperties?.CloneNode(true) ?? new D.ParagraphProperties();
-                var firstRun = firstPara?.GetFirstChild<D.Run>();
-                var runProps = (D.RunProperties)firstRun?.RunProperties?.CloneNode(true) ?? new D.RunProperties();
-
-                // Xóa tất cả Paragraphs cũ
-                textBody.RemoveAllChildren<D.Paragraph>();
-
-                var lines = (newText ?? string.Empty).Split('\n');
-                if (!lines.Any() || (lines.Length == 1 && string.IsNullOrEmpty(lines[0])))
-                {
-                    lines = new string[] { "" }; // Thêm một dòng trống để giữ định dạng
-                }
-
-                foreach (var line in lines)
-                {
-                    var newRun = new D.Run(
-                        (D.RunProperties)runProps.CloneNode(true),
-                        new D.Text(line)
-                    );
-
-                    var newPara = new D.Paragraph(
-                        (D.ParagraphProperties)paraProps.CloneNode(true),
-                        newRun
-                    );
-
-                    textBody.Append(newPara);
                 }
             }
         }
 
-
-        private SlidePart CloneSlidePart(PresentationPart presentationPart, SlidePart templateSlidePart, ref uint uniqueSlideId)
+        // HÀM HELPER CLONE/DELETE (Không cần dùng nữa)
+        private SlidePart CloneSlidePart(PresentationPart presentationPart, SlidePart templateSlide, ref uint uniqueSlideId)
         {
-            string newRelId = "rId" + Guid.NewGuid().ToString("N");
-            var newSlidePart = presentationPart.AddNewPart<SlidePart>(newRelId);
-
-            using (Stream templateStream = templateSlidePart.GetStream())
-            using (Stream newSlideStream = newSlidePart.GetStream(FileMode.Create))
-            {
-                templateStream.CopyTo(newSlideStream);
-            }
-
-            if (templateSlidePart.SlideLayoutPart == null)
-            {
-                throw new InvalidOperationException("Slide mẫu (template slide) không có SlideLayoutPart.");
-            }
-            string layoutRelId = templateSlidePart.GetIdOfPart(templateSlidePart.SlideLayoutPart);
-            newSlidePart.AddPart(templateSlidePart.SlideLayoutPart, layoutRelId);
-
-            foreach (var part in templateSlidePart.Parts)
-            {
-                if (part.OpenXmlPart is SlideLayoutPart)
-                {
-                    continue;
-                }
-
-                newSlidePart.AddPart(part.OpenXmlPart, part.RelationshipId);
-            }
-
-            return newSlidePart;
+            _logger.LogError("CloneSlidePart không nên được gọi trong luồng này.");
+            throw new InvalidOperationException("Logic clone slide không còn được sử dụng.");
         }
 
         #endregion
