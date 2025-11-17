@@ -90,7 +90,16 @@ builder.Services.AddSwaggerGen(c =>
     c.OperationFilter<MathSlides.Present.Swagger.FileUploadOperationFilter>();
 });
 
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", builder =>
+        builder
+            .WithOrigins("http://localhost:3000", "https://localhost:3000", "http://localhost:5173")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials()
+    );
+});
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey = jwtSettings["Secret"] ?? throw new InvalidOperationException("JWT Secret is required");
 
@@ -134,7 +143,7 @@ if (!Directory.Exists(templatesPath))
 {
     Directory.CreateDirectory(templatesPath);
 }
-
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

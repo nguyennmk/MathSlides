@@ -1,4 +1,5 @@
-﻿using MathSlides.Service.Interfaces;
+﻿using MathSlides.Service.DTOs.Generation;
+using MathSlides.Service.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging; 
 using System;                      
@@ -60,19 +61,19 @@ namespace MathSlides.Present.Controllers
             }
         }
 
-    [HttpPost("generate-from-pptx-template")]
+        [HttpPost("generate-from-pptx-template")]
         [ProducesResponseType(typeof(FileContentResult), 200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> GenerateSlidesFromPptxTemplate([FromBody] GenerationRequest request)
         {
+            // 1. Validation (Đã chính xác)
             if (request.TopicId <= 0 || string.IsNullOrWhiteSpace(request.TemplateName))
             {
                 return BadRequest(new { message = "TopicId và TemplateName là bắt buộc." });
             }
 
-            // Kiểm tra đuôi file
             if (!request.TemplateName.EndsWith(".pptx", StringComparison.OrdinalIgnoreCase))
             {
                 return BadRequest(new { message = "TemplateName cho luồng này phải là một file .pptx." });
@@ -80,14 +81,19 @@ namespace MathSlides.Present.Controllers
 
             try
             {
-                // Gọi phương thức service MỚI
-                var (stream, fileName) = await _slideGenerationService.GenerateSlidesFromPptxTemplateAsync(request.TopicId, request.TemplateName);
+                // 2. Gọi Service với DTO (Đã chính xác)
+                var (stream, fileName) = await _slideGenerationService.GenerateSlidesFromPptxTemplateAsync(request);
 
                 if (stream == null || stream.Length == 0)
                 {
                     return NotFound(new { message = "Không thể tạo PPTX." });
                 }
+
                 string mimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+
+                // 3. Trả về file
+                // PHẦN QUAN TRỌNG: Hãy đảm bảo service của bạn đã gọi stream.Position = 0;
+                // Nhưng để chắc chắn, Controller nên gọi .ToArray()
                 return File(stream.ToArray(), mimeType, fileName);
             }
             catch (FileNotFoundException ex)
@@ -95,7 +101,7 @@ namespace MathSlides.Present.Controllers
                 _logger.LogWarning(ex, "Lỗi file không tìm thấy khi tạo slide");
                 return NotFound(new { message = ex.Message });
             }
-            catch (JsonException ex) // Lỗi này vẫn có thể xảy ra từ Gemini
+            catch (JsonException ex)
             {
                 _logger.LogWarning(ex, "Lỗi parse JSON (từ Gemini) khi tạo slide");
                 return BadRequest(new { message = "Lỗi xử lý JSON (từ Gemini): " + ex.Message });
@@ -108,9 +114,5 @@ namespace MathSlides.Present.Controllers
         }
     }
 
-    public class GenerationRequest
-    {
-        public int TopicId { get; set; }
-        public string TemplateName { get; set; } = "default_math_template.json";
-    }
+    
 }
