@@ -30,7 +30,6 @@ namespace MathSlides.Service.DTOs.Admin
         public string? Tags { get; set; }
     }
 
-    // DTO cho [FromForm] khi cập nhật Template
     public class UpdateTemplateRequestDTO
     {
         public IFormFile? PptxFile { get; set; } // File .pptx (TÙY CHỌN, nếu null là không thay đổi file)

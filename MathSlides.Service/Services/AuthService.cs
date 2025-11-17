@@ -34,7 +34,6 @@ namespace MathSlides.Service.Services
 
         public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
         {
-            // Validate
             if (await _authRepository.UsernameExistsAsync(request.Username))
                 throw new ArgumentException("Username already exists");
 
@@ -45,7 +44,6 @@ namespace MathSlides.Service.Services
             if (role == null)
                 throw new ArgumentException("Invalid role");
 
-            // Hash password - Sửa lỗi BCrypt
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
             var user = new User
@@ -73,11 +71,9 @@ namespace MathSlides.Service.Services
             {
                 throw new UnauthorizedAccessException("Invalid Email or password");
             }
-            // Verify password - Sửa lỗi BCrypt
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 throw new UnauthorizedAccessException("Invalid Email or password");
 
-            // Update RoleName if null
             if (string.IsNullOrEmpty(user.RoleName))
             {
                 var role = await _authRepository.GetRoleByIdAsync(user.RoleID);
@@ -105,12 +101,10 @@ namespace MathSlides.Service.Services
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.RoleName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                // Sửa lỗi ToUnixTimeSeconds - sử dụng DateTimeOffset
                 new Claim(JwtRegisteredClaimNames.Iat, new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(),
                          ClaimValueTypes.Integer64)
             };
 
-            // Lấy JWT config an toàn hơn
             var jwtSecret = _configuration["Jwt:Secret"] ?? throw new InvalidOperationException("JWT Secret not found");
             var jwtIssuer = _configuration["Jwt:Issuer"] ?? "MathSlidesAPI";
             var jwtAudience = _configuration["Jwt:Audience"] ?? "MathSlidesClient";
@@ -163,7 +157,6 @@ namespace MathSlides.Service.Services
         }
         public async Task<UserInfo> UpdateProfileAsync(int userIdFromToken, int userIdFromRoute, UpdateProfileRequestDTO request)
         {
-            // User ID trong token (người đang đăng nhập) phải khớp với User ID trên route (người bị sửa)
             if (userIdFromToken != userIdFromRoute)
             {
                 _logger.LogWarning($"Security violation: User {userIdFromToken} attempted to update profile of user {userIdFromRoute}.");
@@ -176,7 +169,6 @@ namespace MathSlides.Service.Services
                 throw new KeyNotFoundException("Không tìm thấy tài khoản hoặc tài khoản đã bị khóa.");
             }
 
-            // 3. Kiểm tra Username/Email trùng lặp (với user khác)
             if (user.Email != request.Email && await _authRepository.EmailExistsAsync(request.Email))
             {
                 throw new ArgumentException("Email này đã được sử dụng bởi tài khoản khác.");

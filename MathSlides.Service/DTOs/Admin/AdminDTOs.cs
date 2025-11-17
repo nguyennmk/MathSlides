@@ -18,7 +18,6 @@ namespace MathSlides.Service.DTOs.Admin
         public DateTime CreatedAt { get; set; }
     }
 
-    // DTO để Admin cập nhật User
     public class AdminUpdateUserRequestDTO
     {
         [Required]
@@ -37,7 +36,6 @@ namespace MathSlides.Service.DTOs.Admin
         public bool IsActive { get; set; }
     }
 
-    // DTO để hiển thị Role
     public class AdminRoleResponseDTO
     {
         public int RoleID { get; set; }

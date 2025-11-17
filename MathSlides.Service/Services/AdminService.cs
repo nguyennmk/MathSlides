@@ -49,7 +49,6 @@ namespace MathSlides.Service.Services
                 throw new KeyNotFoundException($"User with ID {userId} not found.");
             }
 
-            // Kiểm tra email/username có bị trùng với user khác không
             var existingEmail = await _authRepository.GetUserByEmailAsync(request.Email);
             if (existingEmail != null && existingEmail.UserID != userId)
             {
@@ -62,7 +61,6 @@ namespace MathSlides.Service.Services
                 throw new ArgumentException("Username already exists.");
             }
 
-            // Cập nhật thông tin
             user.Username = request.Username;
             user.Email = request.Email;
             user.RoleID = request.RoleID;
@@ -70,7 +68,6 @@ namespace MathSlides.Service.Services
 
             var updatedUser = await _authRepository.UpdateUserAsync(user);
 
-            // Lấy lại Role Name nếu RoleID thay đổi
             var role = await _authRepository.GetRoleByIdAsync(updatedUser.RoleID);
             updatedUser.RoleName = role?.Name ?? string.Empty;
 
@@ -82,7 +79,6 @@ namespace MathSlides.Service.Services
             return await _authRepository.SoftDeleteUserAsync(userId);
         }
 
-        // Hàm helper để map Entity sang DTO
         private AdminUserResponseDTO MapUserToDTO(User user)
         {
             return new AdminUserResponseDTO
