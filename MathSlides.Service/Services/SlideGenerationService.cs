@@ -126,8 +126,7 @@ Mỗi object đại diện cho một slide và phải có các khóa: ""title"",
                     {
                         TopicID = topic.TopicID,
                         Title = geminiContent.Title,
-                        Summary = geminiContent.Summary,
-                        Source = geminiContent.Source,
+                        Summary = geminiContent.Summary,                        
                         Formulas = new List<Formula>(),
                         Examples = new List<Example>()
                     };

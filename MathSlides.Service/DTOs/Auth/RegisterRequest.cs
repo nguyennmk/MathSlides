@@ -21,6 +21,8 @@ namespace MathSlides.Business_Object.Models.DTOs.Auth
         [Required]
         [MinLength(6)]
         public string Password { get; set; } = string.Empty;
-
+        
+        [Range(1, 3)]
+        public int RoleID { get; set; } = 3;
     }
 }

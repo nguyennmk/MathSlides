@@ -529,8 +529,7 @@ namespace MathSlides.Service.Services
                     { "tieu_de_trang_hai", content1.Title ?? "sgfdsg" },
                     { "noi_dung_trang_hai", content1.Summary ?? "sdgsdg" },
                     { "cong_thuc_trang_hai", content1.Formulas.FirstOrDefault()?.FormulaText ?? "sdgsd" },
-                    { "vi_du_trang_hai", content1.Examples.FirstOrDefault()?.ExampleText ?? "sdgsd" },
-                    { "nguon_thong_tin_trang_hai", content1.Source ?? request.Source ?? topic.Source ?? "sgdsadg" } // Sửa: request.Source
+                    { "vi_du_trang_hai", content1.Examples.FirstOrDefault()?.ExampleText ?? "sdgsd" }                   
                 };
                 _logger.LogInformation("--- Đang xử lý Slide 2 (Nội dung) ---");
                 ReplacePlaceholdersByTag(contentSlidePart, contentSlideReplacements);
